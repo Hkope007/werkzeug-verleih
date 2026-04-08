@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>QR Kamera Test</title>
 
-  <!-- ✅ QR-Code Scanner Bibliothek -->
+  <!-- ✅ STABILE QR-Bibliothek -->
   <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
 
   <style>
@@ -15,12 +15,12 @@
     }
     #reader {
       width: 100%;
-      max-width: 320px;
+      max-width: 360px;
       margin-top: 20px;
     }
     #result {
       margin-top: 20px;
-      font-size: 18px;
+      font-size: 16px;
       padding: 10px;
       border: 1px solid #ccc;
     }
@@ -32,41 +32,42 @@
 </head>
 <body>
 
-  <h1>QR‑Scan – Kamera Test</h1>
+<h1>QR‑Scan Test</h1>
 
-  <button onclick="startScan()">Kamera starten</button>
+<button onclick="startScan()">Kamera starten</button>
 
-  <div id="reader"></div>
+<div id="reader"></div>
 
-  <div id="result">
-    Noch kein QR‑Code gescannt
-  </div>
+<div id="result">Warte auf QR‑Code …</div>
 
-  <script>
-    let qrScanner;
+<script>
+  let scanner;
 
-    function startScan() {
-      if (!qrScanner) {
-        qrScanner = new Html5Qrcode("reader");
+  function startScan() {
+    document.getElementById("result").innerText =
+      "🔍 Scanner läuft – bitte QR‑Code ruhig halten";
+
+    scanner = new Html5Qrcode("reader");
+
+    scanner.start(
+      { facingMode: "environment" },
+      {
+        fps: 5,
+        qrbox: { width: 280, height: 280 }
+      },
+      (decodedText) => {
+        document.getElementById("result").innerText =
+          "✅ QR‑Code erkannt:\n" + decodedText;
+
+        scanner.stop();
+      },
+      (_error) => {
+        // Absichtlich leer – Scanner sucht kontinuierlich
       }
-
-      qrScanner.start(
-        { facingMode: "environment" },
-        {
-          fps: 10,
-          qrbox: { width: 250, height: 250 }
-        },
-        (decodedText) => {
-          qrScanner.stop();
-          document.getElementById("result").innerText =
-            "✅ QR‑Code erkannt:\n" + decodedText;
-        },
-        (errorMessage) => {
-          // Fehlermeldungen beim Scannen ignorieren
-        }
-      );
-    }
-  </script>
+    );
+  }
+</script>
 
 </body>
 </html>
+
