@@ -1,5 +1,34 @@
-html>
+<!DOCTYPE html>
 <html lang="de">
+<!-- Firebase App -->
+<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+
+<!-- Firestore -->
+<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+
+<!-- Authentication -->
+<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+
+<script>
+  // 🔥 DEINE Firebase-Konfiguration (aus der Console)
+  const firebaseConfig = {
+    apiKey: "HIER_DEIN_API_KEY",
+    authDomain: "werkzeug-verleih-sv.firebaseapp.com",
+    projectId: "werkzeug-verleih-sv",
+    storageBucket: "werkzeug-verleih-sv.appspot.com",
+    messagingSenderId: "HIER_DEINE_ID",
+    appId: "HIER_DEINE_APP_ID"
+  };
+
+  // Firebase initialisieren
+  firebase.initializeApp(firebaseConfig);
+
+  // Firestore & Auth bereitstellen
+  const db = firebase.firestore();
+  const auth = firebase.auth();
+
+  console.log("✅ Firebase verbunden");
+</script>
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -16,15 +45,17 @@ html>
       padding: 16px;
       border-radius: 8px;
       max-width: 420px;
+      margin-bottom: 20px;
       border: 1px solid #ccc;
-      margin-bottom: 16px;
     }
-    h1, h2, h3 { margin-top: 0; }
     select, button {
       padding: 10px;
       font-size: 16px;
       width: 100%;
-      margin-top: 8px;
+      margin-top: 10px;
+    }
+    h2 {
+      margin-top: 0;
     }
     .history {
       font-size: 14px;
@@ -34,67 +65,55 @@ html>
       max-height: 200px;
       overflow-y: auto;
     }
-    .muted { color: #666; }
   </style>
 </head>
 <body>
 
 <h1>🔧 Werkzeug Verleih</h1>
 
-<div id="toolCard" class="card">Warte auf Werkzeug …</div>
+<div id="toolCard" class="card">
+  Werkzeug wird geladen …
+</div>
 
-<div class="card">
+<div id="historyCard" class="card">
   <h3>📜 Historie</h3>
-  <div id="history" class="history muted">Noch keine Einträge</div>
+  <div id="history" class="history">
+    Noch keine Einträge
+  </div>
 </div>
 
 <script>
-  // === Stammdaten (Demo / später DB) ===========================
-  const TOOLS = {
+  // ✅ Werkzeug-Stammdaten (später DB)
+  const tools = {
     "AKKU-001": { name: "Akkuschrauber Bosch", total: 5 },
     "FLEX-001": { name: "Flex Makita", total: 2 }
   };
 
-  // === URL-Parameter ===========================================
+  // ✅ URL-Parameter lesen
   const params = new URLSearchParams(window.location.search);
   const toolId = params.get("tool");
 
-  const card = document.getElementById("toolCard");
-  const historyEl = document.getElementById("history");
-
-  if (!toolId) {
-    card.innerHTML = "❌ Kein Werkzeug angegeben (QR-Code scannen).";
-    throw new Error("Kein tool-Parameter");
-  }
-
-  const tool = TOOLS[toolId];
-  if (!tool) {
-    card.innerHTML = `<h2>Unbekanntes Werkzeug</h2><p>ID: ${toolId}</p>`;
-    throw new Error("Unbekanntes Werkzeug");
-  }
-
-  // === State (persistenter Test-Store per Werkzeug) ============
-  const STORE_KEY = "tool_state_" + toolId;
-  const defaultState = {
-    available: tool.total,
+  // ✅ lokaler Speicher
+  const storeKey = "tool_" + toolId;
+  let state = JSON.parse(localStorage.getItem(storeKey)) || {
+    available: tools[toolId]?.total || 0,
     history: []
   };
-  let state = JSON.parse(localStorage.getItem(STORE_KEY)) || defaultState;
 
   function save() {
-    localStorage.setItem(STORE_KEY, JSON.stringify(state));
+    localStorage.setItem(storeKey, JSON.stringify(state));
     render();
   }
 
   function addHistory(text) {
-    const ts = new Date().toLocaleString();
-    state.history.unshift(`${ts} – ${text}`);
+    const time = new Date().toLocaleString();
+    state.history.unshift(`${time} – ${text}`);
   }
 
   function borrow() {
     const qty = Number(document.getElementById("qty").value);
     if (qty > state.available) {
-      alert("Nicht genügend Stück verfügbar.");
+      alert("Nicht genügend Stück verfügbar!");
       return;
     }
     state.available -= qty;
@@ -104,9 +123,9 @@ html>
 
   function giveBack() {
     const qty = Number(document.getElementById("qty").value);
-    const lent = tool.total - state.available;
-    if (qty > lent) {
-      alert("Rückgabe zu hoch.");
+    const maxBack = tools[toolId].total - state.available;
+    if (qty > maxBack) {
+      alert("Rückgabe zu hoch!");
       return;
     }
     state.available += qty;
@@ -115,31 +134,5 @@ html>
   }
 
   function render() {
-    card.innerHTML = `
-      <h2>${tool.name}</h2>
-      <p><b>ID:</b> ${toolId}</p>
-      <p><b>Verfügbar:</b> ${state.available} von ${tool.total}</p>
-
-      <label>Menge</label>
-      <select id="qty">
-        ${Array.from({length: tool.total}, (_, i) =>
-          `<option value="${i+1}">${i+1}</option>`
-        ).join("")}
-      </select>
-
-      <button onclick="borrow()">➡️ Ausleihen</button>
-      <button onclick="giveBack()">⬅️ Zurückgeben</button>
-    `;
-
-    historyEl.innerHTML = state.history.length
-      ? state.history.join("<br>")
-      : '<span class="muted">Noch keine Einträge</span>';
-  }
-
-  // === Initiales Render ========================================
-  render();
-</script>
-
-</body>
-</html>
-``
+    const tool = tools[toolId];
+    const card = document.getElementById("toolCard");
