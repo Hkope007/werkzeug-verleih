@@ -1,24 +1,32 @@
 <!DOCTYPE html>
 <html lang="de">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Werkzeug Verleih – Test</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Werkzeug Verleih – QR Bibliothek Test</title>
+
+  <!-- ✅ QR-Code Bibliothek -->
+  <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
 </head>
 <body>
 
-<h1>✅ Seite geladen</h1>
+  <h1>QR‑Bibliothek Test</h1>
 
-<button onclick="test()">Test JavaScript</button>
+  <button onclick="checkLibrary()">Bibliothek prüfen</button>
 
-<p id="out"></p>
+  <p id="result">Noch nicht geprüft</p>
 
-<script>
-  function test() {
-    document.getElementById("out").innerText =
-      "✅ JavaScript funktioniert auf dem Handy";
-  }
-</script>
+  <script>
+    function checkLibrary() {
+      if (typeof Html5Qrcode !== "undefined") {
+        document.getElementById("result").innerText =
+          "✅ QR‑Bibliothek wurde erfolgreich geladen";
+      } else {
+        document.getElementById("result").innerText =
+          "❌ QR‑Bibliothek NICHT geladen";
+      }
+    }
+  </script>
 
 </body>
 </html>
