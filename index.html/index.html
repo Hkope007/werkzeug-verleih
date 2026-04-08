@@ -9,11 +9,27 @@
     body {
       font-family: Arial, sans-serif;
       padding: 20px;
+      background: #f7f7f7;
     }
-    .box {
+    .card {
+      background: #ffffff;
       border: 1px solid #ccc;
-      padding: 15px;
-      margin-top: 20px;
+      padding: 16px;
+      border-radius: 8px;
+      max-width: 420px;
+    }
+    h2 {
+      margin-top: 0;
+    }
+    .status {
+      font-weight: bold;
+      margin: 10px 0;
+    }
+    button {
+      padding: 12px;
+      font-size: 16px;
+      width: 100%;
+      margin-top: 15px;
     }
   </style>
 </head>
@@ -21,20 +37,49 @@
 
 <h1>Werkzeug Verleih</h1>
 
-<div id="output" class="box">
+<div id="content" class="card">
   Bitte QR‑Code scannen …
 </div>
 
 <script>
+  // ✅ Lokale Werkzeugdaten (später: Datenbank)
+  const werkzeuge = {
+    "AKKU-001": {
+      name: "Akkuschrauber Bosch",
+      gesamt: 5,
+      verfuegbar: 3
+    },
+    "FLEX-001": {
+      name: "Flex Makita",
+      gesamt: 2,
+      verfuegbar: 1
+    }
+  };
+
+  // ✅ Werkzeug-ID aus der URL lesen
   const params = new URLSearchParams(window.location.search);
   const toolId = params.get("tool");
 
-  if (toolId) {
-    document.getElementById("output").innerHTML = `
-      <h2>Werkzeug erkannt</h2>
+  const content = document.getElementById("content");
+
+  if (!toolId) {
+    content.innerHTML = "❌ Kein Werkzeug angegeben";
+  } else if (!werkzeuge[toolId]) {
+    content.innerHTML = `
+      <h2>Unbekanntes Werkzeug</h2>
+      <p>ID: ${toolId}</p>
+    `;
+  } else {
+    const w = werkzeuge[toolId];
+    content.innerHTML = `
+      <h2>${w.name}</h2>
       <p><b>ID:</b> ${toolId}</p>
-      <p>Status: verfügbar</p>
-      <button>Ausleihen</button>
+      <p class="status">
+        Verfügbar: ${w.verfuegbar} von ${w.gesamt}
+      </p>
+      <button onclick="alert('Ausleihe kommt im nächsten Schritt')">
+        Ausleihen
+      </button>
     `;
   }
 </script>
