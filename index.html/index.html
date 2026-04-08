@@ -1,63 +1,23 @@
+
 <!DOCTYPE html>
 <html lang="de">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Werkzeug Verleih</title>
-
-  <!-- ? QR-Code Scanner Bibliothek -->
-  <script src="https://unpkg.com/html5-qrcode"></script>
-
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      padding: 20px;
-    }
-    button {
-      padding: 12px;
-      font-size: 16px;
-    }
-    #reader {
-      width: 100%;
-      max-width: 350px;
-      margin-top: 20px;
-    }
-    #output {
-      margin-top: 20px;
-      padding: 10px;
-      border: 1px solid #ccc;
-      font-size: 16px;
-    }
-  </style>
+  <title>JS Test</title>
 </head>
 <body>
 
-  <h1>Werkzeug Verleih</h1>
+<h1>JS Test</h1>
+<button onclick="test()">Klick mich</button>
+<p id="out"></p>
 
-  <button onclick="startScan()">QR scannen</button>
-
-  <div id="reader"></div>
-
-  <div id="output">Noch kein QR-Code erkannt</div>
-
-  <script>
-    function startScan() {
-      const html5QrCode = new Html5Qrcode("reader");
-
-      html5QrCode.start(
-        { facingMode: "environment" },
-        { fps: 10, qrbox: 250 },
-        (qrText) => {
-          html5QrCode.stop();
-          document.getElementById("output").innerHTML =
-            "<b>QR-Code erkannt:</b><br>" + qrText;
-        },
-        (error) => {
-          // Fehler ignorieren (normal beim Suchen)
-        }
-      );
-    }
-  </script>
+<script>
+  function test() {
+    document.getElementById("out").innerText =
+      "✅ JavaScript funktioniert";
+  }
+</script>
 
 </body>
 </html>
