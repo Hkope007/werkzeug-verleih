@@ -1,29 +1,58 @@
-<!DOCTYPE html>
+html>
 <html lang="de">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>DEBUG URL</title>
+  <title>Werkzeug Verleih</title>
+
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      padding: 20px;
+      background: #f4f4f4;
+    }
+    .card {
+      background: #fff;
+      padding: 16px;
+      border-radius: 8px;
+      max-width: 420px;
+      border: 1px solid #ccc;
+      margin-bottom: 16px;
+    }
+    h1, h2, h3 { margin-top: 0; }
+    select, button {
+      padding: 10px;
+      font-size: 16px;
+      width: 100%;
+      margin-top: 8px;
+    }
+    .history {
+      font-size: 14px;
+      background: #fafafa;
+      padding: 10px;
+      border: 1px solid #ddd;
+      max-height: 200px;
+      overflow-y: auto;
+    }
+    .muted { color: #666; }
+  </style>
 </head>
 <body>
 
-<h1>DEBUG – URL Test</h1>
+<h1>🔧 Werkzeug Verleih</h1>
 
-<p><b>Aktuelle URL:</b></p>
-<pre id="fullUrl"></pre>
+<div id="toolCard" class="card">Warte auf Werkzeug …</div>
 
-<p><b>Parameter „tool“:</b></p>
-<pre id="toolValue"></pre>
+<div class="card">
+  <h3>📜 Historie</h3>
+  <div id="history" class="history muted">Noch keine Einträge</div>
+</div>
 
 <script>
-  const url = window.location.href;
-  const params = new URLSearchParams(window.location.search);
-  const tool = params.get("tool");
+  // === Stammdaten (Demo / später DB) ===========================
+  const TOOLS = {
+    "AKKU-001": { name: "Akkuschrauber Bosch", total: 5 },
+    "FLEX-001": { name: "Flex Makita", total: 2 }
+  };
 
-  document.getElementById("fullUrl").innerText = url;
-  document.getElementById("toolValue").innerText =
-    tool ? tool : "❌ KEIN tool-Parameter gefunden";
-</script>
-
-</body>
-</html>
+  // === URL-Parameter ===========================================
