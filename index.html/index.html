@@ -56,3 +56,90 @@ html>
   };
 
   // === URL-Parameter ===========================================
+  const params = new URLSearchParams(window.location.search);
+  const toolId = params.get("tool");
+
+  const card = document.getElementById("toolCard");
+  const historyEl = document.getElementById("history");
+
+  if (!toolId) {
+    card.innerHTML = "❌ Kein Werkzeug angegeben (QR-Code scannen).";
+    throw new Error("Kein tool-Parameter");
+  }
+
+  const tool = TOOLS[toolId];
+  if (!tool) {
+    card.innerHTML = `<h2>Unbekanntes Werkzeug</h2><p>ID: ${toolId}</p>`;
+    throw new Error("Unbekanntes Werkzeug");
+  }
+
+  // === State (persistenter Test-Store per Werkzeug) ============
+  const STORE_KEY = "tool_state_" + toolId;
+  const defaultState = {
+    available: tool.total,
+    history: []
+  };
+  let state = JSON.parse(localStorage.getItem(STORE_KEY)) || defaultState;
+
+  function save() {
+    localStorage.setItem(STORE_KEY, JSON.stringify(state));
+    render();
+  }
+
+  function addHistory(text) {
+    const ts = new Date().toLocaleString();
+    state.history.unshift(`${ts} – ${text}`);
+  }
+
+  function borrow() {
+    const qty = Number(document.getElementById("qty").value);
+    if (qty > state.available) {
+      alert("Nicht genügend Stück verfügbar.");
+      return;
+    }
+    state.available -= qty;
+    addHistory(`Ausgeliehen: ${qty} Stück`);
+    save();
+  }
+
+  function giveBack() {
+    const qty = Number(document.getElementById("qty").value);
+    const lent = tool.total - state.available;
+    if (qty > lent) {
+      alert("Rückgabe zu hoch.");
+      return;
+    }
+    state.available += qty;
+    addHistory(`Zurückgegeben: ${qty} Stück`);
+    save();
+  }
+
+  function render() {
+    card.innerHTML = `
+      <h2>${tool.name}</h2>
+      <p><b>ID:</b> ${toolId}</p>
+      <p><b>Verfügbar:</b> ${state.available} von ${tool.total}</p>
+
+      <label>Menge</label>
+      <select id="qty">
+        ${Array.from({length: tool.total}, (_, i) =>
+          `<option value="${i+1}">${i+1}</option>`
+        ).join("")}
+      </select>
+
+      <button onclick="borrow()">➡️ Ausleihen</button>
+      <button onclick="giveBack()">⬅️ Zurückgeben</button>
+    `;
+
+    historyEl.innerHTML = state.history.length
+      ? state.history.join("<br>")
+      : '<span class="muted">Noch keine Einträge</span>';
+  }
+
+  // === Initiales Render ========================================
+  render();
+</script>
+
+</body>
+</html>
+``
