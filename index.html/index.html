@@ -1,8 +1,8 @@
 <!DOCTYPE html>
 <html lang="de">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Werkzeug Verleih</title>
 
   <style>
@@ -10,17 +10,10 @@
       font-family: Arial, sans-serif;
       padding: 20px;
     }
-    button {
-      padding: 14px;
-      font-size: 18px;
-      margin-top: 10px;
-      width: 100%;
-    }
-    #result {
-      margin-top: 20px;
-      padding: 10px;
+    .box {
       border: 1px solid #ccc;
-      font-size: 18px;
+      padding: 15px;
+      margin-top: 20px;
     }
   </style>
 </head>
@@ -28,27 +21,22 @@
 
 <h1>Werkzeug Verleih</h1>
 
-<input
-  type="file"
-  accept="image/*"
-  capture="environment"
-  id="camera"
-  style="display:none"
-/>
-
-<button onclick="openCamera()">QR‑Code scannen</button>
-
-<div id="result">Noch kein QR‑Code erkannt</div>
+<div id="output" class="box">
+  Bitte QR‑Code scannen …
+</div>
 
 <script>
-  function openCamera() {
-    document.getElementById("camera").click();
-  }
+  const params = new URLSearchParams(window.location.search);
+  const toolId = params.get("tool");
 
-  document.getElementById("camera").addEventListener("change", function () {
-    document.getElementById("result").innerText =
-      "✅ QR‑Code aufgenommen\nID: AKKU‑001 (Test)";
-  });
+  if (toolId) {
+    document.getElementById("output").innerHTML = `
+      <h2>Werkzeug erkannt</h2>
+      <p><b>ID:</b> ${toolId}</p>
+      <p>Status: verfügbar</p>
+      <button>Ausleihen</button>
+    `;
+  }
 </script>
 
 </body>
