@@ -3,107 +3,27 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Werkzeug Verleih</title>
-
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      padding: 20px;
-      background: #f4f4f4;
-    }
-    .card {
-      background: #fff;
-      padding: 16px;
-      border-radius: 8px;
-      max-width: 420px;
-      margin-bottom: 20px;
-      border: 1px solid #ccc;
-    }
-    select, button {
-      padding: 10px;
-      font-size: 16px;
-      width: 100%;
-      margin-top: 10px;
-    }
-    h2 {
-      margin-top: 0;
-    }
-    .history {
-      font-size: 14px;
-      background: #fafafa;
-      padding: 10px;
-      border: 1px solid #ddd;
-      max-height: 200px;
-      overflow-y: auto;
-    }
-  </style>
+  <title>DEBUG URL</title>
 </head>
 <body>
 
-<h1>🔧 Werkzeug Verleih</h1>
+<h1>DEBUG – URL Test</h1>
 
-<div id="toolCard" class="card">
-  Werkzeug wird geladen …
-</div>
+<p><b>Aktuelle URL:</b></p>
+<pre id="fullUrl"></pre>
 
-<div id="historyCard" class="card">
-  <h3>📜 Historie</h3>
-  <div id="history" class="history">
-    Noch keine Einträge
-  </div>
-</div>
+<p><b>Parameter „tool“:</b></p>
+<pre id="toolValue"></pre>
 
 <script>
-  // ✅ Werkzeug-Stammdaten (später DB)
-  const tools = {
-    "AKKU-001": { name: "Akkuschrauber Bosch", total: 5 },
-    "FLEX-001": { name: "Flex Makita", total: 2 }
-  };
-
-  // ✅ URL-Parameter lesen
+  const url = window.location.href;
   const params = new URLSearchParams(window.location.search);
-  const toolId = params.get("tool");
+  const tool = params.get("tool");
 
-  // ✅ lokaler Speicher
-  const storeKey = "tool_" + toolId;
-  let state = JSON.parse(localStorage.getItem(storeKey)) || {
-    available: tools[toolId]?.total || 0,
-    history: []
-  };
+  document.getElementById("fullUrl").innerText = url;
+  document.getElementById("toolValue").innerText =
+    tool ? tool : "❌ KEIN tool-Parameter gefunden";
+</script>
 
-  function save() {
-    localStorage.setItem(storeKey, JSON.stringify(state));
-    render();
-  }
-
-  function addHistory(text) {
-    const time = new Date().toLocaleString();
-    state.history.unshift(`${time} – ${text}`);
-  }
-
-  function borrow() {
-    const qty = Number(document.getElementById("qty").value);
-    if (qty > state.available) {
-      alert("Nicht genügend Stück verfügbar!");
-      return;
-    }
-    state.available -= qty;
-    addHistory(`Ausgeliehen: ${qty} Stück`);
-    save();
-  }
-
-  function giveBack() {
-    const qty = Number(document.getElementById("qty").value);
-    const maxBack = tools[toolId].total - state.available;
-    if (qty > maxBack) {
-      alert("Rückgabe zu hoch!");
-      return;
-    }
-    state.available += qty;
-    addHistory(`Zurückgegeben: ${qty} Stück`);
-    save();
-  }
-
-  function render() {
-    const tool = tools[toolId];
-    const card = document.getElementById("toolCard");
+</body>
+</html>
