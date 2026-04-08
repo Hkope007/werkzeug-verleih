@@ -3,31 +3,70 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Werkzeug Verleih – QR Bibliothek Test</title>
+  <title>QR Kamera Test</title>
 
-  <!-- ✅ QR-Code Bibliothek -->
+  <!-- ✅ QR-Code Scanner Bibliothek -->
   <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      padding: 20px;
+    }
+    #reader {
+      width: 100%;
+      max-width: 320px;
+      margin-top: 20px;
+    }
+    #result {
+      margin-top: 20px;
+      font-size: 18px;
+      padding: 10px;
+      border: 1px solid #ccc;
+    }
+    button {
+      padding: 12px;
+      font-size: 16px;
+    }
+  </style>
 </head>
 <body>
 
-  <h1>QR‑Bibliothek Test</h1>
+  <h1>QR‑Scan – Kamera Test</h1>
 
-  <button onclick="checkLibrary()">Bibliothek prüfen</button>
+  <button onclick="startScan()">Kamera starten</button>
 
-  <p id="result">Noch nicht geprüft</p>
+  <div id="reader"></div>
+
+  <div id="result">
+    Noch kein QR‑Code gescannt
+  </div>
 
   <script>
-    function checkLibrary() {
-      if (typeof Html5Qrcode !== "undefined") {
-        document.getElementById("result").innerText =
-          "✅ QR‑Bibliothek wurde erfolgreich geladen";
-      } else {
-        document.getElementById("result").innerText =
-          "❌ QR‑Bibliothek NICHT geladen";
+    let qrScanner;
+
+    function startScan() {
+      if (!qrScanner) {
+        qrScanner = new Html5Qrcode("reader");
       }
+
+      qrScanner.start(
+        { facingMode: "environment" },
+        {
+          fps: 10,
+          qrbox: { width: 250, height: 250 }
+        },
+        (decodedText) => {
+          qrScanner.stop();
+          document.getElementById("result").innerText =
+            "✅ QR‑Code erkannt:\n" + decodedText;
+        },
+        (errorMessage) => {
+          // Fehlermeldungen beim Scannen ignorieren
+        }
+      );
     }
   </script>
 
 </body>
 </html>
-``
