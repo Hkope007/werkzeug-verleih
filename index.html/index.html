@@ -9,80 +9,101 @@
     body {
       font-family: Arial, sans-serif;
       padding: 20px;
-      background: #f7f7f7;
+      background: #f4f4f4;
     }
     .card {
-      background: #ffffff;
-      border: 1px solid #ccc;
+      background: #fff;
       padding: 16px;
       border-radius: 8px;
       max-width: 420px;
+      margin-bottom: 20px;
+      border: 1px solid #ccc;
+    }
+    select, button {
+      padding: 10px;
+      font-size: 16px;
+      width: 100%;
+      margin-top: 10px;
     }
     h2 {
       margin-top: 0;
     }
-    .status {
-      font-weight: bold;
-      margin: 10px 0;
-    }
-    button {
-      padding: 12px;
-      font-size: 16px;
-      width: 100%;
-      margin-top: 15px;
+    .history {
+      font-size: 14px;
+      background: #fafafa;
+      padding: 10px;
+      border: 1px solid #ddd;
+      max-height: 200px;
+      overflow-y: auto;
     }
   </style>
 </head>
 <body>
 
-<h1>Werkzeug Verleih</h1>
+<h1>🔧 Werkzeug Verleih</h1>
 
-<div id="content" class="card">
-  Bitte QR‑Code scannen …
+<div id="toolCard" class="card">
+  Werkzeug wird geladen …
+</div>
+
+<div id="historyCard" class="card">
+  <h3>📜 Historie</h3>
+  <div id="history" class="history">
+    Noch keine Einträge
+  </div>
 </div>
 
 <script>
-  // ✅ Lokale Werkzeugdaten (später: Datenbank)
-  const werkzeuge = {
-    "AKKU-001": {
-      name: "Akkuschrauber Bosch",
-      gesamt: 5,
-      verfuegbar: 3
-    },
-    "FLEX-001": {
-      name: "Flex Makita",
-      gesamt: 2,
-      verfuegbar: 1
-    }
+  // ✅ Werkzeug-Stammdaten (später DB)
+  const tools = {
+    "AKKU-001": { name: "Akkuschrauber Bosch", total: 5 },
+    "FLEX-001": { name: "Flex Makita", total: 2 }
   };
 
-  // ✅ Werkzeug-ID aus der URL lesen
+  // ✅ URL-Parameter lesen
   const params = new URLSearchParams(window.location.search);
   const toolId = params.get("tool");
 
-  const content = document.getElementById("content");
+  // ✅ lokaler Speicher
+  const storeKey = "tool_" + toolId;
+  let state = JSON.parse(localStorage.getItem(storeKey)) || {
+    available: tools[toolId]?.total || 0,
+    history: []
+  };
 
-  if (!toolId) {
-    content.innerHTML = "❌ Kein Werkzeug angegeben";
-  } else if (!werkzeuge[toolId]) {
-    content.innerHTML = `
-      <h2>Unbekanntes Werkzeug</h2>
-      <p>ID: ${toolId}</p>
-    `;
-  } else {
-    const w = werkzeuge[toolId];
-    content.innerHTML = `
-      <h2>${w.name}</h2>
-      <p><b>ID:</b> ${toolId}</p>
-      <p class="status">
-        Verfügbar: ${w.verfuegbar} von ${w.gesamt}
-      </p>
-      <button onclick="alert('Ausleihe kommt im nächsten Schritt')">
-        Ausleihen
-      </button>
-    `;
+  function save() {
+    localStorage.setItem(storeKey, JSON.stringify(state));
+    render();
   }
-</script>
 
-</body>
-</html>
+  function addHistory(text) {
+    const time = new Date().toLocaleString();
+    state.history.unshift(`${time} – ${text}`);
+  }
+
+  function borrow() {
+    const qty = Number(document.getElementById("qty").value);
+    if (qty > state.available) {
+      alert("Nicht genügend Stück verfügbar!");
+      return;
+    }
+    state.available -= qty;
+    addHistory(`Ausgeliehen: ${qty} Stück`);
+    save();
+  }
+
+  function giveBack() {
+    const qty = Number(document.getElementById("qty").value);
+    const maxBack = tools[toolId].total - state.available;
+    if (qty > maxBack) {
+      alert("Rückgabe zu hoch!");
+      return;
+    }
+    state.available += qty;
+    addHistory(`Zurückgegeben: ${qty} Stück`);
+    save();
+  }
+
+  function render() {
+    const tool = tools[toolId];
+    const card = document.getElementById("toolCard");
