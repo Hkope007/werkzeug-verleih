@@ -1,12 +1,15 @@
-<!DOCTYPE html>
+
+!DOCTYPE html>
 <html lang="de">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Werkzeug Verleih</title>
 
-<!-- Firebase -->
-<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-ript src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.jsript src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+<!-- Firebase Scripts -->
+<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
 
 <style>
 body { font-family: Arial; padding:20px; background:#f4f4f4; }
@@ -35,6 +38,7 @@ input,select,button { width:100%; padding:10px; margin-top:10px; font-size:16px;
   border-left: 5px solid #1f8a1f;
 }
 </style>
+
 </head>
 
 <body>
@@ -113,7 +117,7 @@ async function loadTool() {
   loadHistory();
 }
 
-// History laden farbig & robust
+// History laden
 async function loadHistory(){
   const snap = await histRef.orderBy("time","desc").get();
 
@@ -125,7 +129,7 @@ async function loadHistory(){
   history.innerHTML = snap.docs.map(doc => {
     const h = doc.data();
 
-    const time = h.time ? new Date(h.time).toLocaleString() : "Unbekannte Zeit";
+    const time = new Date(h.time).toLocaleString();
     const giver = h.bookedBy ?? "Unbekannt";
     const recv  = h.assignedTo ?? "Unbekannt";
     const text  = h.text ?? "";
