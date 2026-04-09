@@ -88,18 +88,21 @@ async function loadTool(){
 }
 
 async function loadHistory(){
-  const snap=await histRef.orderBy("time","desc").get();
+  const snap = await histRef.orderBy("time", "desc").get();
 
-  if(snap.empty){
-    history.textContent="Keine Einträge";
+  if (snap.empty) {
+    history.textContent = "Keine Einträge";
     return;
   }
 
-  history.innerHTML = snap.docs.map(d=>{
-    const h=d.data();
-    return `${new Date(h.time).toLocaleString()} – ${h.bookedBy} ➜ ${h.assignedTo}: ${h.text}`;
-  }).join("\n");
+  history.innerHTML = snap.docs
+    .map(doc => {
+      const h = doc.data();
+      return `${new Date(h.time).toLocaleString()} – ${h.text}`;
+    })
+    .join("\n");
 }
+
 
 async function borrow(){
   const qty=Number(document.getElementById("qty").value);
