@@ -103,26 +103,34 @@ async function loadHistory() {
     .join("\n");
 }
 
-async function borrow(){
-  const qty=Number(document.getElementById("qty").value);
-  const assigned=document.getElementById("assigned").value.trim()||"Selbst";
+async function borrow() {
+  const qty = Number(document.getElementById("qty").value);
+  const assigned = document.getElementById("assigned").value.trim() || currentUserData.name;
 
-  await db.runTransaction(async tx=>{
-    const snap=await tx.get(toolRef);
-    const t=snap.data();
+  await db.runTransaction(async tx => {
+    const snap = await tx.get(toolRef);
+    const t = snap.data();
 
-    if(Number(t.available)<qty){
+    if (Number(t.available) < qty) {
       alert("Nicht genug verfügbar!");
       return;
     }
 
-    tx.update(toolRef,{available:String(Number(t.available)-qty)});
+    tx.update(toolRef, { available: String(Number(t.available) - qty) });
 
-    tx.set(histRef.doc(),{
-      time:Date.now(),
-      bookedBy:"User",
-      assignedTo:assigned,
-      text:`${qty} Stück ausgeliehen`
+    let text;
+    if (assigned === currentUserData.name) {
+      text = `${qty} Stück selbst ausgeliehen`;
+    } else {
+      text = `${qty} Stück an ${assigned} ausgegeben`;
+    }
+
+    tx.set(histRef.doc(), {
+      time: Date.now(),
+      bookedBy: currentUserData.name,
+      assignedTo: assigned,
+      qty: qty,
+      text: text
     });
   });
 
