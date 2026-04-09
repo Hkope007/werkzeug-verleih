@@ -1,33 +1,22 @@
+
 <!DOCTYPE html>
 <html lang="de">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Login Werkzeug-Verleih</title>
+<title>Login</title>
 
-<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js</script>
 <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
-
-<style>
-body{font-family:Arial;padding:20px;background:#f4f4f4;}
-.card{
-  background:white;padding:20px;border-radius:8px;
-  border:1px solid #ccc;max-width:360px;margin:auto;
-}
-input,button{width:100%;padding:12px;margin-top:10px;font-size:16px;}
-</style>
 </head>
 
 <body>
+<h2>Login Werkzeug-Verleih</h2>
 
-<h2>🔐 Login Werkzeug-Verleih</h2>
-
-<div class="card">
-  <input id="email" type="email" placeholder="E-Mail">
-  <input id="password" type="password" placeholder="Passwort">
-  <button onclick="login()">✅ Login</button>
-</div>
+<input id="email" placeholder="E-Mail" />
+<input id="password" type="password" placeholder="Passwort" />
+<button onclick="login()">Login</button>
 
 <script>
 const firebaseConfig={
@@ -41,20 +30,21 @@ const firebaseConfig={
 
 firebase.initializeApp(firebaseConfig);
 const auth=firebase.auth();
+const db=firebase.firestore();
 
-auth.onAuthStateChanged(user=>{
-  if(user) window.location="index.html";
+auth.onAuthStateChanged(u=>{
+  if(u) window.location="index.html";
 });
 
 async function login(){
-  const email=document.getElementById("email").value;
-  const pw=document.getElementById("password").value;
+  let email=document.getElementById("email").value;
+  let pw=document.getElementById("password").value;
 
   try{
     await auth.signInWithEmailAndPassword(email,pw);
-    window.location="index.html?tool=AKKU-001";
+    window.location="index.html";
   }catch(e){
-    alert("❌ "+e.message);
+    alert(e.message);
   }
 }
 </script>
