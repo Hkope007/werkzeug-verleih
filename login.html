@@ -5,23 +5,18 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Login – Werkzeug Verleih</title>
 
-  https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js
-  https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js</script>
-  https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js
+  <script src="https://www.gstatic.com/firebasejs/10.8.0-compat.js
+https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js
+https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js
 
   <style>
     body { font-family: Arial; padding: 20px; background:#f4f4f4; }
-    .card {
-      max-width: 380px; margin: auto; padding: 20px;
-      border: 1px solid #ccc; border-radius: 8px; background: white;
-    }
-    input, button {
-      width: 100%; padding: 12px; margin-top: 10px; font-size: 16px;
-    }
+    .card { max-width:380px; margin:auto; background:white; padding:20px; border-radius:8px; border:1px solid #ccc; }
+    input,button { width:100%; padding:12px; margin-top:10px; font-size:16px; }
   </style>
 </head>
-
 <body>
+
 <h2>🔐 Login Werkzeug-Verleih</h2>
 
 <div class="card">
@@ -31,7 +26,6 @@
 </div>
 
 <script>
-/* ✅ Deine Firebase Config */
 const firebaseConfig = {
   apiKey: "AIzaSyCjoG7jIP1xs-uoBTMezml7UuTsyIouzoY",
   authDomain: "werkzeug-verleih-sv.firebaseapp.com",
@@ -45,29 +39,21 @@ firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
 const db = firebase.firestore();
 
-/* ✅ Angemeldet bleiben */
 auth.onAuthStateChanged(async user => {
   if (!user) return;
-  const snap = await db.collection("users").where("email", "==", user.email).get();
-  if (snap.empty) return;
-  const role = snap.docs[0].data().role;
-  window.location.href = "index.html?role=" + role;
+  const s = await db.collection("users").where("email", "==", user.email).get();
+  if (!s.empty) window.location.href = "index.html";
 });
 
-/* ✅ Login */
 async function login() {
-  const email = emailField.value = document.getElementById("email").value;
+  const email = document.getElementById("email").value;
   const pw = document.getElementById("password").value;
 
   try {
     await auth.signInWithEmailAndPassword(email, pw);
-
-    const snap = await db.collection("users").where("email", "==", email).get();
-    const role = snap.docs[0].data().role;
-
-    window.location.href = "index.html?role=" + role;
+    window.location.href = "index.html";
   } catch(e) {
-    alert("❌ Login fehlgeschlagen: " + e.message);
+    alert("❌ " + e.message);
   }
 }
 </script>
