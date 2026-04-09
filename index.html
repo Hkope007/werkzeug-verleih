@@ -6,7 +6,8 @@
 <title>Werkzeug Verleih</title>
 
 <!-- ✅ Firebase Scripts -->
-<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.jsript src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
 
 <style>
@@ -45,10 +46,10 @@ const auth=firebase.auth();
 
 let currentUserData=null;
 
-/* ✅ Benutzer laden */
+/* ✅ eingeloggten User laden */
 auth.onAuthStateChanged(async user=>{
-  if(!user){window.location="login.html";return;}
-  
+  if(!user){ window.location="login.html"; return; }
+
   const snap=await db.collection("users")
                      .where("email","==",user.email)
                      .get();
@@ -57,7 +58,7 @@ auth.onAuthStateChanged(async user=>{
   loadTool();
 });
 
-/* ✅ Tool aus URL holen */
+/* ✅ Werkzeug-ID aus URL */
 const params=new URLSearchParams(window.location.search);
 const toolId=params.get("tool");
 const toolRef=db.collection("tools").doc(toolId);
@@ -97,7 +98,7 @@ async function loadHistory(){
   const snap=await histRef.orderBy("time","desc").get();
 
   if(snap.empty){
-    history.textContent="Keine Einträge";
+    history.innerText="Keine Einträge";
     return;
   }
 
@@ -111,9 +112,9 @@ async function loadHistory(){
 async function borrow(){
   const qty=Number(document.getElementById("qty").value);
   const assignedInput=document.getElementById("assigned").value.trim();
-  const assigned=assignedInput===""?currentUserData.name:assignedInput;
+  const assigned = assignedInput === "" ? currentUserData.name : assignedInput;
 
-  const text=assigned===currentUserData.name
+  const text = assigned === currentUserData.name
     ? `${qty} Stück selbst ausgeliehen`
     : `${qty} Stück an ${assigned} ausgegeben`;
 
@@ -121,9 +122,13 @@ async function borrow(){
     const snap=await tx.get(toolRef);
     const t=snap.data();
 
-    if(Number(t.available)<qty){alert("Nicht genug verfügbar!");return;}
+    if(Number(t.available)<qty){
+      alert("Nicht genug verfügbar!");
+      return;
+    }
 
     tx.update(toolRef,{available:String(Number(t.available)-qty)});
+
     tx.set(histRef.doc(),{
       time:Date.now(),
       bookedBy:currentUserData.name,
@@ -149,6 +154,7 @@ async function giveBack(){
     }
 
     tx.update(toolRef,{available:String(Number(t.available)+qty)});
+
     tx.set(histRef.doc(),{
       time:Date.now(),
       bookedBy:currentUserData.name,
