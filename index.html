@@ -87,22 +87,21 @@ async function loadTool(){
   loadHistory();
 }
 
-async function loadHistory(){
+async function loadHistory() {
   const snap = await histRef.orderBy("time", "desc").get();
 
   if (snap.empty) {
-    history.textContent = "Keine Einträge";
+    document.getElementById("history").textContent = "Keine Einträge";
     return;
   }
 
-  history.innerHTML = snap.docs
+  document.getElementById("history").innerText = snap.docs
     .map(doc => {
       const h = doc.data();
       return `${new Date(h.time).toLocaleString()} – ${h.text}`;
     })
     .join("\n");
 }
-
 
 async function borrow(){
   const qty=Number(document.getElementById("qty").value);
