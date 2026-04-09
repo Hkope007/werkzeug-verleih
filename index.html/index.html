@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Werkzeug Verleih</title>
 
-  <!-- ✅ Firebase COMPAT SDK (RICHTIG FÜR HTML-PROJEKT!) -->
+  <!-- ✅ Firebase COMPAT SDK -->
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
@@ -54,7 +54,7 @@
 </div>
 
 <script>
-  /* ✅ DEINE FIREBASE KONFIGURATION (100% korrekt übernommen) */
+  /* ✅ Deine Firebase Config */
   const firebaseConfig = {
     apiKey: "AIzaSyCjoG7jIP1xs-uoBTMezml7UuTsyIouzoY",
     authDomain: "werkzeug-verleih-sv.firebaseapp.com",
@@ -69,12 +69,8 @@
   const db = firebase.firestore();
   const auth = firebase.auth();
 
-  // ✅ Anonymer Login (DU bist der einzige Nutzer)
-  auth.signInAnonymously().then(() => {
-    console.log("✅ Eingeloggt als:", auth.currentUser.uid);
-  });
+  auth.signInAnonymously();
 
-  /* ✅ Werkzeug-ID aus URL holen */
   const params = new URLSearchParams(window.location.search);
   const toolId = params.get("tool");
 
@@ -82,14 +78,13 @@
   const historyEl = document.getElementById("history");
 
   if (!toolId) {
-    toolCard.innerHTML = "❌ Kein Werkzeug angegeben (QR-Code öffnen!)";
+    toolCard.innerHTML = "❌ Kein Werkzeug angegeben (QR scannen!)";
     throw new Error("Kein tool Parameter");
   }
 
   const toolRef = db.collection("tools").doc(toolId);
   const historyRef = db.collection("history_" + toolId);
 
-  /* ✅ Werkzeug laden */
   async function loadTool() {
     const snap = await toolRef.get();
     if (!snap.exists) {
@@ -98,7 +93,6 @@
     }
 
     const tool = snap.data();
-
     const total = Number(tool.total);
     const available = Number(tool.available);
 
@@ -122,7 +116,6 @@
     loadHistory();
   }
 
-  /* ✅ Historie laden */
   async function loadHistory() {
     const snap = await historyRef.orderBy("time", "desc").get();
 
@@ -132,14 +125,10 @@
     }
 
     historyEl.innerHTML = snap.docs
-      .map(doc => {
-        const d = doc.data();
-        return `${new Date(d.time).toLocaleString()} – ${d.employee}: ${d.text}`;
-      })
+      .map(doc => `${new Date(doc.data().time).toLocaleString()} – ${doc.data().employee}: ${doc.data().text}`)
       .join("\n");
   }
 
-  /* ✅ Ausleihen */
   async function borrow() {
     const qty = Number(document.getElementById("qty").value);
     const emp = document.getElementById("empName").value || "Unbekannt";
@@ -150,7 +139,7 @@
 
       const available = Number(tool.available);
       if (available < qty) {
-        alert("❌ Nicht genug verfügbar!");
+        alert("❌ Nicht genug verfügbar");
         return;
       }
 
@@ -165,7 +154,6 @@
     loadTool();
   }
 
-  /* ✅ Rückgabe */
   async function giveBack() {
     const qty = Number(document.getElementById("qty").value);
     const emp = document.getElementById("empName").value || "Unbekannt";
