@@ -5,25 +5,16 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Werkzeug Verleih</title>
 
-<!-- ✅ Firebase SCRIPTS -->
-<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+<!-- ✅ Firebase Scripts -->
+https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js>
+https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js>
+https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js>
+
 <style>
-body{
-  font-family: Arial; padding:20px; background:#f4f4f4;
-}
-.card{
-  background:white; padding:20px; border-radius:8px;
-  border:1px solid #ccc; max-width:450px; margin-bottom:20px;
-}
-input,select,button{
-  width:100%; padding:10px; margin-top:10px; font-size:16px;
-}
-.history{
-  white-space:pre-line; background:white; border:1px solid #ccc;
-  padding:10px; max-height:250px; overflow-y:auto;
-}
+body{font-family:Arial;padding:20px;background:#f4f4f4;}
+.card{background:white;padding:20px;border-radius:8px;border:1px solid #ccc;max-width:450px;margin-bottom:20px;}
+input,select,button{width:100%;padding:10px;margin-top:10px;font-size:16px;}
+.history{white-space:pre-line;background:white;border:1px solid #ccc;padding:10px;max-height:250px;overflow-y:auto;}
 </style>
 </head>
 
@@ -40,55 +31,53 @@ input,select,button{
 
 <script>
 /* ✅ Firebase Konfiguration */
-const firebaseConfig = {
-  apiKey: "AIzaSyCjoG7jIP1xs-uoBTMezml7UuTsyIouzoY",
-  authDomain: "werkzeug-verleih-sv.firebaseapp.com",
-  projectId: "werkzeug-verleih-sv",
-  storageBucket: "werkzeug-verleih-sv.appspot.com",
-  messagingSenderId: "1083183347140",
-  appId: "1:1083183347140:web:26b2a6c2203b7c6021e091"
+const firebaseConfig={
+  apiKey:"AIzaSyCjoG7jIP1xs-uoBTMezml7UuTsyIouzoY",
+  authDomain:"werkzeug-verleih-sv.firebaseapp.com",
+  projectId:"werkzeug-verleih-sv",
+  storageBucket:"werkzeug-verleih-sv.appspot.com",
+  messagingSenderId:"1083183347140",
+  appId:"1:1083183347140:web:26b2a6c2203b7c6021e091"
 };
 
 firebase.initializeApp(firebaseConfig);
+const db=firebase.firestore();
+const auth=firebase.auth();
 
-const db = firebase.firestore();
-const auth = firebase.auth();
+let currentUserData=null;
 
-let currentUserData = null;
-
-/* ✅ Eingeloggten Benutzer laden */
-auth.onAuthStateChanged(async user => {
-  if (!user) {
-    window.location = "login.html";
+/* ✅ Eingeloggten User laden */
+auth.onAuthStateChanged(async user=>{
+  if(!user){
+    window.location="login.html";
     return;
   }
 
-  const snap = await db.collection("users")
-      .where("email", "==", user.email)
-      .get();
+  const snap=await db.collection("users")
+                    .where("email","==",user.email)
+                    .get();
 
-  currentUserData = snap.docs[0].data();
+  currentUserData=snap.docs[0].data();
   loadTool();
 });
 
-/* ✅ Werkzeug-ID aus URL */
-const params = new URLSearchParams(window.location.search);
-const toolId = params.get("tool");
-
-const toolRef = db.collection("tools").doc(toolId);
-const histRef = db.collection("history_" + toolId);
+/* ✅ Werkzeug holen */
+const params=new URLSearchParams(window.location.search);
+const toolId=params.get("tool");
+const toolRef=db.collection("tools").doc(toolId);
+const histRef=db.collection("history_"+toolId);
 
 /* ✅ Werkzeug laden */
 async function loadTool(){
-  const snap = await toolRef.get();
-  if (!snap.exists){
-    document.getElementById("toolCard").innerText = "❌ Werkzeug nicht gefunden!";
+  const snap=await toolRef.get();
+  if(!snap.exists){
+    document.getElementById("toolCard").innerText="❌ Werkzeug nicht gefunden";
     return;
   }
 
-  const t = snap.data();
+  const t=snap.data();
 
-  document.getElementById("toolCard").innerHTML = `
+  document.getElementById("toolCard").innerHTML=`
     <h2>${t.name}</h2>
     <p>Verfügbar: ${t.available} von ${t.total}</p>
 
@@ -97,7 +86,7 @@ async function loadTool(){
 
     <label>Menge:</label>
     <select id="qty">
-      ${Array.from({length: Number(t.total)}, (_,i)=>`<option>${i+1}</option>`).join("")}
+      ${Array.from({length:Number(t.total)},(_,i)=>`<option>${i+1}</option>`).join("")}
     </select>
 
     <button onclick="borrow()">➡️ Ausleihen</button>
@@ -107,83 +96,79 @@ async function loadTool(){
   loadHistory();
 }
 
-/* ✅ Historie laden – MIT NAMEN */
+/* ✅ History MIT NAMEN */
 async function loadHistory(){
-  const snap = await histRef.orderBy("time","desc").get();
+  const snap=await histRef.orderBy("time","desc").get();
 
-  if (snap.empty){
-    document.getElementById("history").innerText = "Keine Einträge";
+  if(snap.empty){
+    history.innerText="Keine Einträge";
     return;
   }
 
-  document.getElementById("history").innerText =
-    snap.docs.map(doc => {
-      const h = doc.data();
-      return `${new Date(h.time).toLocaleString()} – ${h.bookedBy} ➜ ${h.assignedTo}: ${h.text}`;
-    }).join("\n");
+  history.innerText = snap.docs.map(doc=>{
+    const h=doc.data();
+    return `${new Date(h.time).toLocaleString()} – ${h.bookedBy} ➜ ${h.assignedTo}: ${h.text}`;
+  }).join("\n");
 }
 
-/* ✅ Werkzeug ausleihen */
+/* ✅ Ausleihen */
 async function borrow(){
-  const qty = Number(qty.value);
-  const assigned = assigned.value.trim() || currentUserData.name;
+  const qty=Number(qtyElem.value);
+  const assignedName=assigned.value.trim() || currentUserData.name;
 
-  let text =
-    assigned === currentUserData.name
+  let text = assignedName===currentUserData.name
     ? `${qty} Stück selbst ausgeliehen`
-    : `${qty} Stück an ${assigned} ausgegeben`;
+    : `${qty} Stück an ${assignedName} ausgegeben`;
 
-  await db.runTransaction(async tx => {
-    const snap = await tx.get(toolRef);
-    const t = snap.data();
+  await db.runTransaction(async tx=>{
+    const snap=await tx.get(toolRef);
+    const t=snap.data();
 
-    if (Number(t.available) < qty){
+    if(Number(t.available)<qty){
       alert("Nicht genug verfügbar!");
       return;
     }
 
-    tx.update(toolRef, { available: String(Number(t.available)-qty) });
-
+    tx.update(toolRef,{available:String(Number(t.available)-qty)});
     tx.set(histRef.doc(),{
-      time: Date.now(),
-      bookedBy: currentUserData.name,
-      assignedTo: assigned,
-      text: text
+      time:Date.now(),
+      bookedBy:currentUserData.name,
+      assignedTo:assignedName,
+      text:text
     });
   });
 
   loadTool();
 }
 
-/* ✅ Werkzeug zurückgeben */
+/* ✅ Rückgabe */
 async function giveBack(){
-  const qty = Number(qty.value);
+  const qty=Number(qtyElem.value);
 
-  await db.runTransaction(async tx => {
-    const snap = await tx.get(toolRef);
-    const t = snap.data();
+  await db.runTransaction(async tx=>{
+    const snap=await tx.get(toolRef);
+    const t=snap.data();
 
-    if (Number(t.available) + qty > Number(t.total)){
+    if(Number(t.available)+qty>Number(t.total)){
       alert("Rückgabe zu hoch!");
       return;
     }
 
-    tx.update(toolRef, { available: String(Number(t.available)+qty) });
-
+    tx.update(toolRef,{available:String(Number(t.available)+qty)});
     tx.set(histRef.doc(),{
-      time: Date.now(),
-      bookedBy: currentUserData.name,
-      assignedTo: currentUserData.name,
-      text: `${qty} Stück zurückgenommen`
+      time:Date.now(),
+      bookedBy:currentUserData.name,
+      assignedTo:currentUserData.name,
+      text:`${qty} Stück zurückgenommen`
     });
   });
 
   loadTool();
 }
 
-/* ✅ Abmelden */
+/* ✅ Logout */
 function logout(){
-  auth.signOut().then(() => window.location = "login.html");
+  auth.signOut().then(()=>window.location="login.html");
 }
 </script>
 
