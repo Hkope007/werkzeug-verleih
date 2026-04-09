@@ -139,6 +139,25 @@ async function loadHistory(){
     const recv  = h.assignedTo ?? "Unbekannt";
     const text  = h.text ?? "";
 
+    let cssClass = "history-entry";
+
+    if (text.includes("zurück")) {
+      cssClass += " history-rueckgabe";
+    } else if (text.includes("ausgegeben")) {
+      cssClass += " history-ausgabe";
+    } else if (text.includes("selbst")) {
+      cssClass += " history-ausleihe";
+    }
+
+    return `
+      <div class="${cssClass}">
+        ${time}<br>
+        <b>${giver}</b> ➜ <b>${recv}</b><br>
+        ${text}
+      </div>
+    `;
+  }).join("");
+}
     // ✅ Klasse automatisch bestimmen
     let cssClass = "history-entry";
 
@@ -182,7 +201,7 @@ async function borrow() {
 
     tx.update(toolRef, {
       available: String(Number(t.available) - qty),
-      lastBorrower: assigned      // ✅ speichern, wer es bekommen hat
+      lastBorrower: assigned   // ✅ Speichert den Ausleiher
     });
 
     tx.set(histRef.doc(), {
@@ -196,17 +215,7 @@ async function borrow() {
   loadTool();
 }
 
-    tx.update(toolRef, { available:String(Number(t.available) - qty) });
-    tx.set(histRef.doc(), {
-      time: Date.now(),
-      bookedBy: currentUserData.name,
-      assignedTo: assigned,
-      text: text
-    });
-  });
-
-  loadTool();
-}
+   
 
 /* ✅ Rückgabe */
 async function giveBack() {
@@ -221,18 +230,23 @@ async function giveBack() {
       return;
     }
 
-    tx.update(toolRef, { available:String(Number(t.available) + qty) });
+    const originalBorrower = t.lastBorrower || currentUserData.name;
+
+    tx.update(toolRef, {
+      available: String(Number(t.available) + qty),
+      lastBorrower: null
+    });
+
     tx.set(histRef.doc(), {
       time: Date.now(),
       bookedBy: currentUserData.name,
-      assignedTo: currentUserData.name,
+      assignedTo: originalBorrower,  // ✅ Name des ursprünglichen Ausleihers
       text: `${qty} Stück zurückgenommen`
     });
   });
 
   loadTool();
 }
-
 /* ✅ Logout */
 function logout() {
   auth.signOut().then(() => window.location = "login.html");
