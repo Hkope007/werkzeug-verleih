@@ -1,38 +1,14 @@
 <!DOCTYPE html>
 <html lang="de">
-<!-- Firebase App -->
-<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
-
-<!-- Firestore -->
-<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
-
-<!-- Authentication -->
-<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
-
-<script>
-  // 🔥 DEINE Firebase-Konfiguration (aus der Console)
-  const firebaseConfig = {
-    apiKey: "HIER_DEIN_API_KEY",
-    authDomain: "werkzeug-verleih-sv.firebaseapp.com",
-    projectId: "werkzeug-verleih-sv",
-    storageBucket: "werkzeug-verleih-sv.appspot.com",
-    messagingSenderId: "HIER_DEINE_ID",
-    appId: "HIER_DEINE_APP_ID"
-  };
-
-  // Firebase initialisieren
-  firebase.initializeApp(firebaseConfig);
-
-  // Firestore & Auth bereitstellen
-  const db = firebase.firestore();
-  const auth = firebase.auth();
-
-  console.log("✅ Firebase verbunden");
-</script>
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Werkzeug Verleih</title>
+
+  <!-- Firebase compat SDKs -->
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
 
   <style>
     body {
@@ -44,26 +20,25 @@
       background: #fff;
       padding: 16px;
       border-radius: 8px;
-      max-width: 420px;
-      margin-bottom: 20px;
+      max-width: 450px;
       border: 1px solid #ccc;
+      margin-bottom: 18px;
     }
+    h1,h2,h3 { margin-top: 0; }
     select, button {
       padding: 10px;
       font-size: 16px;
       width: 100%;
       margin-top: 10px;
     }
-    h2 {
-      margin-top: 0;
-    }
     .history {
       font-size: 14px;
       background: #fafafa;
       padding: 10px;
       border: 1px solid #ddd;
-      max-height: 200px;
+      max-height: 220px;
       overflow-y: auto;
+      white-space: pre-line;
     }
   </style>
 </head>
@@ -71,68 +46,158 @@
 
 <h1>🔧 Werkzeug Verleih</h1>
 
-<div id="toolCard" class="card">
-  Werkzeug wird geladen …
-</div>
+<div id="toolCard" class="card">Warte auf Werkzeug …</div>
 
-<div id="historyCard" class="card">
+<div class="card">
   <h3>📜 Historie</h3>
-  <div id="history" class="history">
-    Noch keine Einträge
-  </div>
+  <div id="history" class="history">Noch keine Einträge</div>
 </div>
 
 <script>
-  // ✅ Werkzeug-Stammdaten (später DB)
-  const tools = {
-    "AKKU-001": { name: "Akkuschrauber Bosch", total: 5 },
-    "FLEX-001": { name: "Flex Makita", total: 2 }
+  // ---------------------------------------------------------
+  // 🔥 Firebase-Konfiguration EINTRAGEN
+  // ---------------------------------------------------------
+  const firebaseConfig = {
+    apiKey: "DEIN_APIKEY_HIER",
+    authDomain: "DEIN-PROJEKT.firebaseapp.com",
+    projectId: "DEIN-PROJEKT",
+    storageBucket: "DEIN-PROJEKT.appspot.com",
+    messagingSenderId: "DEINE-ID",
+    appId: "DEINE-APP-ID"
   };
 
-  // ✅ URL-Parameter lesen
+  firebase.initializeApp(firebaseConfig);
+  const db = firebase.firestore();
+  const auth = firebase.auth();
+
+  // ---------------------------------------------------------
+  // ✅ Werkzeug-ID aus URL holen (?tool=AKKU-001)
+  // ---------------------------------------------------------
   const params = new URLSearchParams(window.location.search);
   const toolId = params.get("tool");
 
-  // ✅ lokaler Speicher
-  const storeKey = "tool_" + toolId;
-  let state = JSON.parse(localStorage.getItem(storeKey)) || {
-    available: tools[toolId]?.total || 0,
-    history: []
-  };
+  const toolCard = document.getElementById("toolCard");
+  const historyEl = document.getElementById("history");
 
-  function save() {
-    localStorage.setItem(storeKey, JSON.stringify(state));
-    render();
+  if (!toolId) {
+    toolCard.innerHTML = "❌ Kein Werkzeug angegeben (QR-Code öffnen!)";
+    throw new Error("Kein tool Parameter");
   }
 
-  function addHistory(text) {
-    const time = new Date().toLocaleString();
-    state.history.unshift(`${time} – ${text}`);
-  }
+  // ---------------------------------------------------------
+  // ✅ Werkzeug laden
+  // ---------------------------------------------------------
+  const toolRef = db.collection("tools").doc(toolId);
+  const historyRef = db.collection("history_" + toolId);
 
-  function borrow() {
-    const qty = Number(document.getElementById("qty").value);
-    if (qty > state.available) {
-      alert("Nicht genügend Stück verfügbar!");
+  async function loadTool() {
+    const snap = await toolRef.get();
+    if (!snap.exists) {
+      toolCard.innerHTML = "❌ Werkzeug nicht gefunden";
       return;
     }
-    state.available -= qty;
-    addHistory(`Ausgeliehen: ${qty} Stück`);
-    save();
+
+    const tool = snap.data();
+
+    // Strings → Zahlen konvertieren
+    const total = Number(tool.total);
+    const available = Number(tool.available);
+
+    toolCard.innerHTML = `
+      <h2>${tool.name}</h2>
+      <p><b>ID:</b> ${toolId}</p>
+      <p><b>Verfügbar:</b> ${available} von ${total}</p>
+
+      <label>Menge auswählen:</label>
+      <select id="qty">
+        ${Array.from({length: total}, (_, i) => `<option value="${i+1}">${i+1}</option>`).join("")}
+      </select>
+
+      <button onclick="borrow()">➡️ Ausleihen</button>
+      <button onclick="giveBack()">⬅️ Zurückgeben</button>
+    `;
+
+    loadHistory();
   }
 
-  function giveBack() {
-    const qty = Number(document.getElementById("qty").value);
-    const maxBack = tools[toolId].total - state.available;
-    if (qty > maxBack) {
-      alert("Rückgabe zu hoch!");
+  // ---------------------------------------------------------
+  // ✅ Historie laden
+  // ---------------------------------------------------------
+  async function loadHistory() {
+    const snap = await historyRef.orderBy("time", "desc").get();
+
+    if (snap.empty) {
+      historyEl.textContent = "Noch keine Einträge";
       return;
     }
-    state.available += qty;
-    addHistory(`Zurückgegeben: ${qty} Stück`);
-    save();
+
+    historyEl.innerHTML = snap.docs.map(doc => {
+      const d = doc.data();
+      return `${new Date(d.time).toLocaleString()} – ${d.text}`;
+    }).join("\n");
   }
 
-  function render() {
-    const tool = tools[toolId];
-    const card = document.getElementById("toolCard");
+  // ---------------------------------------------------------
+  // ✅ Ausleihen
+  // ---------------------------------------------------------
+  async function borrow() {
+    const qty = Number(document.getElementById("qty").value);
+
+    await db.runTransaction(async (tx) => {
+      const snap = await tx.get(toolRef);
+      const tool = snap.data();
+
+      const available = Number(tool.available);
+
+      if (available < qty) {
+        alert("❌ Nicht genug verfügbar!");
+        return;
+      }
+
+      tx.update(toolRef, { available: String(available - qty) });
+      tx.set(historyRef.doc(), {
+        time: Date.now(),
+        text: `Ausgeliehen: ${qty}`
+      });
+    });
+
+    loadTool();
+  }
+
+  // ---------------------------------------------------------
+  // ✅ Rückgabe
+  // ---------------------------------------------------------
+  async function giveBack() {
+    const qty = Number(document.getElementById("qty").value);
+
+    await db.runTransaction(async (tx) => {
+      const snap = await tx.get(toolRef);
+      const tool = snap.data();
+
+      const total = Number(tool.total);
+      const available = Number(tool.available);
+
+      if (available + qty > total) {
+        alert("❌ Rückgabe zu hoch!");
+        return;
+      }
+
+      tx.update(toolRef, { available: String(available + qty) });
+      tx.set(historyRef.doc(), {
+        time: Date.now(),
+        text: `Zurückgegeben: ${qty}`
+      });
+    });
+
+    loadTool();
+  }
+
+  // ---------------------------------------------------------
+  // ✅ Start
+  // ---------------------------------------------------------
+  loadTool();
+
+</script>
+
+</body>
+</html>
