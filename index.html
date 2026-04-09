@@ -9,15 +9,12 @@
 <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+
 <style>
 body { font-family: Arial; padding:20px; background:#f4f4f4; }
 .card { background:white; padding:20px; border-radius:8px; border:1px solid #ccc; max-width:450px; margin-bottom:20px; }
 input,select,button { width:100%; padding:10px; margin-top:10px; font-size:16px; }
 .history { white-space:pre-line; background:white; border:1px solid #ccc; padding:10px; max-height:250px; overflow-y:auto; }
-</style>
-
-<style>
-/* deine bisherigen styles bleiben stehen */
 
 /* ✅ Farbiges History-Design */
 .history-entry {
@@ -29,17 +26,17 @@ input,select,button { width:100%; padding:10px; margin-top:10px; font-size:16px;
 }
 
 .history-ausleihe {
-  background: #fff5b1; /* Gelb */
+  background: #fff5b1;
   border-left: 5px solid #d9b100;
 }
 
 .history-ausgabe {
-  background: #ffe1b1; /* Orange */
+  background: #ffe1b1;
   border-left: 5px solid #d97c00;
 }
 
 .history-rueckgabe {
-  background: #d4ffd4; /* Grün */
+  background: #d4ffd4;
   border-left: 5px solid #1f8a1f;
 }
 </style>
@@ -121,7 +118,7 @@ async function loadTool() {
 
   loadHistory();
 }
-/* ✅ Historie laden – farbig & robust */
+
 /* ✅ Historie laden – farbig & robust */
 async function loadHistory(){
   const snap = await histRef.orderBy("time","desc").get();
@@ -159,26 +156,6 @@ async function loadHistory(){
     `;
   }).join("");
 }
-    // ✅ Klasse automatisch bestimmen
-    let cssClass = "history-entry";
-
-    if (text.includes("zurück")) {
-      cssClass += " history-rueckgabe";
-    } else if (text.includes("ausgegeben")) {
-      cssClass += " history-ausgabe";
-    } else if (text.includes("selbst")) {
-      cssClass += " history-ausleihe";
-    }
-
-    return `
-      <div class="${cssClass}">
-        ${time}<br>
-        <b>${giver}</b> ➜ <b>${recv}</b><br>
-        ${text}
-      </div>
-    `;
-  }).join("");
-}
 
 /* ✅ Ausleihen */
 async function borrow() {
@@ -196,63 +173,3 @@ async function borrow() {
     const t = snap.data();
 
     if (Number(t.available) < qty) {
-      alert("Nicht genug verfügbar!");
-      return;
-    }
-
-    tx.update(toolRef, {
-      available: String(Number(t.available) - qty),
-      lastBorrower: assigned   // ✅ Speichert den Ausleiher
-    });
-
-    tx.set(histRef.doc(), {
-      time: Date.now(),
-      bookedBy: currentUserData.name,
-      assignedTo: assigned,
-      text: text
-    });
-  });
-
-  loadTool();
-}
-
-   
-
-/* ✅ Rückgabe */
-async function giveBack() {
-  const qty = Number(document.getElementById("qty").value);
-
-  await db.runTransaction(async tx => {
-    const snap = await tx.get(toolRef);
-    const t = snap.data();
-
-    if (Number(t.available) + qty > Number(t.total)) {
-      alert("Rückgabe zu hoch!");
-      return;
-    }
-
-    const originalBorrower = t.lastBorrower || currentUserData.name;
-
-    tx.update(toolRef, {
-      available: String(Number(t.available) + qty),
-      lastBorrower: null
-    });
-
-    tx.set(histRef.doc(), {
-      time: Date.now(),
-      bookedBy: currentUserData.name,
-      assignedTo: originalBorrower,  // ✅ Name des ursprünglichen Ausleihers
-      text: `${qty} Stück zurückgenommen`
-    });
-  });
-
-  loadTool();
-}
-/* ✅ Logout */
-function logout() {
-  auth.signOut().then(() => window.location = "login.html");
-}
-</script>
-
-</body>
-</html>
