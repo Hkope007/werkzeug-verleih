@@ -5,8 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Werkzeug Verleih</title>
 
-<!-- ✅ Firebase Scripts – richtig und vollständig -->
-https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js</script>
+<!-- ✅ Firebase SCRIPTS -->
+<script src="https://www.gstatic.com/firebasejs/10-app-compat.js</script>
 <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
 
@@ -64,16 +64,15 @@ auth.onAuthStateChanged(async user => {
     return;
   }
 
-  const snap = await db
-    .collection("users")
-    .where("email", "==", user.email)
-    .get();
+  const snap = await db.collection("users")
+      .where("email", "==", user.email)
+      .get();
 
   currentUserData = snap.docs[0].data();
   loadTool();
 });
 
-/* ✅ Werkzeug-ID aus URL holen */
+/* ✅ Werkzeug-ID aus URL */
 const params = new URLSearchParams(window.location.search);
 const toolId = params.get("tool");
 
@@ -111,7 +110,7 @@ async function loadTool(){
 
 /* ✅ Historie laden – MIT NAMEN */
 async function loadHistory(){
-  const snap = await histRef.orderBy("time", "desc").get();
+  const snap = await histRef.orderBy("time","desc").get();
 
   if (snap.empty){
     document.getElementById("history").innerText = "Keine Einträge";
@@ -127,9 +126,13 @@ async function loadHistory(){
 
 /* ✅ Werkzeug ausleihen */
 async function borrow(){
-  const qty = Number(document.getElementById("qty").value);
-  const assignedInput = document.getElementById("assigned").value.trim();
-  const assigned = assignedInput === "" ? currentUserData.name : assignedInput;
+  const qty = Number(qty.value);
+  const assigned = assigned.value.trim() || currentUserData.name;
+
+  let text =
+    assigned === currentUserData.name
+    ? `${qty} Stück selbst ausgeliehen`
+    : `${qty} Stück an ${assigned} ausgegeben`;
 
   await db.runTransaction(async tx => {
     const snap = await tx.get(toolRef);
@@ -141,11 +144,6 @@ async function borrow(){
     }
 
     tx.update(toolRef, { available: String(Number(t.available)-qty) });
-
-    const text =
-      assigned === currentUserData.name
-      ? `${qty} Stück selbst ausgeliehen`
-      : `${qty} Stück an ${assigned} ausgegeben`;
 
     tx.set(histRef.doc(),{
       time: Date.now(),
@@ -160,7 +158,7 @@ async function borrow(){
 
 /* ✅ Werkzeug zurückgeben */
 async function giveBack(){
-  const qty = Number(document.getElementById("qty").value);
+  const qty = Number(qty.value);
 
   await db.runTransaction(async tx => {
     const snap = await tx.get(toolRef);
