@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Werkzeug Verleih</title>
 
-  <!-- ✅ Firebase COMPAT SDK -->
+  <!-- ✅ Firebase COMPAT SDK (RICHTIG FÜR HTML-PROJEKT!) -->
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
@@ -54,9 +54,7 @@
 </div>
 
 <script>
-  // ---------------------------------------------------------
-  // ✅ DEINE FIREBASE CONFIG HIER EINTRAGEN
-  // ---------------------------------------------------------
+  /* ✅ DEINE FIREBASE KONFIGURATION (100% korrekt übernommen) */
   const firebaseConfig = {
     apiKey: "AIzaSyCjoG7jIP1xs-uoBTMezml7UuTsyIouzoY",
     authDomain: "werkzeug-verleih-sv.firebaseapp.com",
@@ -71,14 +69,12 @@
   const db = firebase.firestore();
   const auth = firebase.auth();
 
-  // Anonymer Login (nur du, keine Mitarbeiter)
+  // ✅ Anonymer Login (DU bist der einzige Nutzer)
   auth.signInAnonymously().then(() => {
-    console.log("✅ Angemeldet als:", auth.currentUser.uid);
+    console.log("✅ Eingeloggt als:", auth.currentUser.uid);
   });
 
-  // ---------------------------------------------------------
-  // ✅ Werkzeug-ID aus URL holen (?tool=AKKU-001)
-  // ---------------------------------------------------------
+  /* ✅ Werkzeug-ID aus URL holen */
   const params = new URLSearchParams(window.location.search);
   const toolId = params.get("tool");
 
@@ -93,18 +89,16 @@
   const toolRef = db.collection("tools").doc(toolId);
   const historyRef = db.collection("history_" + toolId);
 
-  // ---------------------------------------------------------
-  // ✅ Werkzeug laden
-  // ---------------------------------------------------------
+  /* ✅ Werkzeug laden */
   async function loadTool() {
     const snap = await toolRef.get();
-
     if (!snap.exists) {
       toolCard.innerHTML = "❌ Werkzeug nicht gefunden";
       return;
     }
 
     const tool = snap.data();
+
     const total = Number(tool.total);
     const available = Number(tool.available);
 
@@ -128,9 +122,7 @@
     loadHistory();
   }
 
-  // ---------------------------------------------------------
-  // ✅ Historie laden
-  // ---------------------------------------------------------
+  /* ✅ Historie laden */
   async function loadHistory() {
     const snap = await historyRef.orderBy("time", "desc").get();
 
@@ -139,15 +131,15 @@
       return;
     }
 
-    historyEl.innerHTML = snap.docs.map(doc => {
-      const d = doc.data();
-      return `${new Date(d.time).toLocaleString()} – ${d.employee}: ${d.text}`;
-    }).join("\n");
+    historyEl.innerHTML = snap.docs
+      .map(doc => {
+        const d = doc.data();
+        return `${new Date(d.time).toLocaleString()} – ${d.employee}: ${d.text}`;
+      })
+      .join("\n");
   }
 
-  // ---------------------------------------------------------
-  // ✅ Ausleihen
-  // ---------------------------------------------------------
+  /* ✅ Ausleihen */
   async function borrow() {
     const qty = Number(document.getElementById("qty").value);
     const emp = document.getElementById("empName").value || "Unbekannt";
@@ -166,3 +158,43 @@
       tx.set(historyRef.doc(), {
         time: Date.now(),
         employee: emp,
+        text: `Ausgeliehen: ${qty}`
+      });
+    });
+
+    loadTool();
+  }
+
+  /* ✅ Rückgabe */
+  async function giveBack() {
+    const qty = Number(document.getElementById("qty").value);
+    const emp = document.getElementById("empName").value || "Unbekannt";
+
+    await db.runTransaction(async (tx) => {
+      const snap = await tx.get(toolRef);
+      const tool = snap.data();
+
+      const total = Number(tool.total);
+      const available = Number(tool.available);
+
+      if (available + qty > total) {
+        alert("❌ Rückgabe zu hoch!");
+        return;
+      }
+
+      tx.update(toolRef, { available: String(available + qty) });
+      tx.set(historyRef.doc(), {
+        time: Date.now(),
+        employee: emp,
+        text: `Zurückgegeben: ${qty}`
+      });
+    });
+
+    loadTool();
+  }
+
+  loadTool();
+</script>
+
+</body>
+</html>
