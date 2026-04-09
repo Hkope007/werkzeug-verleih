@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Werkzeug Verleih</title>
 
-  <!-- Firebase compat SDKs -->
+  <!-- ✅ Firebase COMPAT SDK (richtige Version für deine App!) -->
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
@@ -55,20 +55,21 @@
 
 <script>
   // ---------------------------------------------------------
-  // 🔥 Firebase-Konfiguration EINTRAGEN
+  // ✅ DEINE FIREBASE CONFIG (aus deinem Screenshot eingefügt)
   // ---------------------------------------------------------
   const firebaseConfig = {
-    apiKey: "DEIN_APIKEY_HIER",
-    authDomain: "DEIN-PROJEKT.firebaseapp.com",
-    projectId: "DEIN-PROJEKT",
-    storageBucket: "DEIN-PROJEKT.appspot.com",
-    messagingSenderId: "DEINE-ID",
-    appId: "DEINE-APP-ID"
+    apiKey: "AIzaSyCjoG7jIP1xs-uoBTMezml7UuTsyIouzoY",
+    authDomain: "werkzeug-verleih-sv.firebaseapp.com",
+    projectId: "werkzeug-verleih-sv",
+    storageBucket: "werkzeug-verleih-sv.firebasestorage.app",
+    messagingSenderId: "1083183347140",
+    appId: "1:1083183347140:web:26b2a6c2203b7c6021e091",
+    measurementId: "G-9B4KKYD7F3"
   };
 
+  // ✅ Firebase initialisieren
   firebase.initializeApp(firebaseConfig);
   const db = firebase.firestore();
-  const auth = firebase.auth();
 
   // ---------------------------------------------------------
   // ✅ Werkzeug-ID aus URL holen (?tool=AKKU-001)
@@ -85,13 +86,17 @@
   }
 
   // ---------------------------------------------------------
-  // ✅ Werkzeug laden
+  // ✅ Firestore Referenzen
   // ---------------------------------------------------------
   const toolRef = db.collection("tools").doc(toolId);
   const historyRef = db.collection("history_" + toolId);
 
+  // ---------------------------------------------------------
+  // ✅ Werkzeug laden
+  // ---------------------------------------------------------
   async function loadTool() {
     const snap = await toolRef.get();
+
     if (!snap.exists) {
       toolCard.innerHTML = "❌ Werkzeug nicht gefunden";
       return;
@@ -148,7 +153,6 @@
       const tool = snap.data();
 
       const available = Number(tool.available);
-
       if (available < qty) {
         alert("❌ Nicht genug verfügbar!");
         return;
