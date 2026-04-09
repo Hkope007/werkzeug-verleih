@@ -1,19 +1,26 @@
+<!DOCTYPE html>
+<html lang="de">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Werkzeug Verleih</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Werkzeug Verleih</title>
 
-  <!-- ✅ Firebase SCRIPTS (alle 3 müssen echte <script>-Tags sein!) -->
-  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compatrc="https://www.gstatic.com/firebasejs/10.8.0/firebasempat.js
-  <script src="https://www.gstatic.com/firebasejs/se-auth-compat.js</script>
+<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
 
-  <style>
-    body{font-family:Arial;padding:20px;background:#f4f4f4;}
-    .card{background:white;padding:20px;border-radius:8px;border:1px solid #ccc;max-width:450px;margin-bottom:20px;}
-    input,select,button{width:100%;padding:10px;margin-top:10px;font-size:16px;}
-    .history{white-space:pre-line;background:white;border:1px solid #ccc;padding:10px;max-height:200px;overflow-y:auto;}
-  </style>
+<style>
+body{font-family:Arial;padding:20px;background:#f4f4f4;}
+.card{
+  background:white;padding:20px;border-radius:8px;border:1px solid #ccc;
+  max-width:450px;margin-bottom:20px;
+}
+input,select,button{width:100%;padding:10px;margin-top:10px;font-size:16px;}
+.history{
+  white-space:pre-line;background:white;border:1px solid #ccc;
+  padding:10px;max-height:200px;overflow-y:auto;
+}
+</style>
 </head>
 
 <body>
@@ -38,11 +45,12 @@ const firebaseConfig={
 };
 
 firebase.initializeApp(firebaseConfig);
+
 const db=firebase.firestore();
 const auth=firebase.auth();
 
 auth.onAuthStateChanged(user=>{
-  if(!user) return window.location="login.html";
+  if(!user) window.location="login.html";
   loadTool();
 });
 
@@ -57,7 +65,9 @@ async function loadTool(){
     toolCard.textContent="❌ Werkzeug nicht gefunden!";
     return;
   }
+
   const t=snap.data();
+
   toolCard.innerHTML=`
     <h2>${t.name}</h2>
     <p>Verfügbar: ${t.available} von ${t.total}</p>
@@ -73,17 +83,22 @@ async function loadTool(){
     <button onclick="borrow()">➡️ Ausleihen</button>
     <button onclick="giveBack()">⬅️ Rückgabe</button>
   `;
+
   loadHistory();
 }
 
 async function loadHistory(){
   const snap=await histRef.orderBy("time","desc").get();
-  history.innerHTML = snap.empty
-    ?"Keine Einträge"
-    :snap.docs.map(d=>{
-       const h=d.data();
-       return `${new Date(h.time).toLocaleString()} – ${h.bookedBy} ➜ ${h.assignedTo}: ${h.text}`;
-     }).join("\n");
+
+  if(snap.empty){
+    history.textContent="Keine Einträge";
+    return;
+  }
+
+  history.innerHTML = snap.docs.map(d=>{
+    const h=d.data();
+    return `${new Date(h.time).toLocaleString()} – ${h.bookedBy} ➜ ${h.assignedTo}: ${h.text}`;
+  }).join("\n");
 }
 
 async function borrow(){
@@ -94,14 +109,18 @@ async function borrow(){
     const snap=await tx.get(toolRef);
     const t=snap.data();
 
-    if(Number(t.available)<qty) return alert("Nicht genug verfügbar!");
+    if(Number(t.available)<qty){
+      alert("Nicht genug verfügbar!");
+      return;
+    }
 
     tx.update(toolRef,{available:String(Number(t.available)-qty)});
+
     tx.set(histRef.doc(),{
       time:Date.now(),
       bookedBy:"User",
       assignedTo:assigned,
-      text:`${qty} Stück ausgegeben`
+      text:`${qty} Stück ausgeliehen`
     });
   });
 
@@ -115,10 +134,13 @@ async function giveBack(){
     const snap=await tx.get(toolRef);
     const t=snap.data();
 
-    if(Number(t.available)+qty > Number(t.total))
-      return alert("Rückgabe zu hoch!");
+    if(Number(t.available)+qty > Number(t.total)){
+      alert("Rückgabe zu hoch!");
+      return;
+    }
 
     tx.update(toolRef,{available:String(Number(t.available)+qty)});
+
     tx.set(histRef.doc(),{
       time:Date.now(),
       bookedBy:"User",
@@ -130,7 +152,9 @@ async function giveBack(){
   loadTool();
 }
 
-function logout(){ auth.signOut().then(()=>window.location="login.html"); }
+function logout(){
+  auth.signOut().then(()=>window.location="login.html");
+}
 </script>
 
 </body>
