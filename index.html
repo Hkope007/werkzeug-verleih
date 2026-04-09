@@ -180,6 +180,22 @@ async function borrow() {
       return;
     }
 
+    tx.update(toolRef, {
+      available: String(Number(t.available) - qty),
+      lastBorrower: assigned      // ✅ speichern, wer es bekommen hat
+    });
+
+    tx.set(histRef.doc(), {
+      time: Date.now(),
+      bookedBy: currentUserData.name,
+      assignedTo: assigned,
+      text: text
+    });
+  });
+
+  loadTool();
+}
+
     tx.update(toolRef, { available:String(Number(t.available) - qty) });
     tx.set(histRef.doc(), {
       time: Date.now(),
