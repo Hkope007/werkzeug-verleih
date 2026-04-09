@@ -3,15 +3,18 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Login – Werkzeug Verleih</title>
+<title>Login Werkzeug-Verleih</title>
 
-<script src="https://www.gstatic.com/firebasejsase-app-compat.js</script>
-https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js
-https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js
+<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
 
 <style>
 body{font-family:Arial;padding:20px;background:#f4f4f4;}
-.card{background:white;padding:20px;border-radius:8px;border:1px solid #ccc;max-width:360px;margin:auto;}
+.card{
+  background:white;padding:20px;border-radius:8px;
+  border:1px solid #ccc;max-width:360px;margin:auto;
+}
 input,button{width:100%;padding:12px;margin-top:10px;font-size:16px;}
 </style>
 </head>
@@ -39,6 +42,10 @@ const firebaseConfig={
 firebase.initializeApp(firebaseConfig);
 const auth=firebase.auth();
 
+auth.onAuthStateChanged(user=>{
+  if(user) window.location="index.html";
+});
+
 async function login(){
   const email=document.getElementById("email").value;
   const pw=document.getElementById("password").value;
@@ -46,7 +53,7 @@ async function login(){
   try{
     await auth.signInWithEmailAndPassword(email,pw);
     window.location="index.html?tool=AKKU-001";
-  } catch(e){
+  }catch(e){
     alert("❌ "+e.message);
   }
 }
