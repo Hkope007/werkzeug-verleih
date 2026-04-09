@@ -95,17 +95,27 @@ async function loadTool() {
 
 /* ✅ Historie laden — robust */
 async function loadHistory() {
-  const snap = await histRef.orderBy("time","desc").get();
+  const snap = await histRef.orderBy("time", "desc").get();
 
   if (snap.empty) {
-    history.innerText = "Keine Einträge";
+    document.getElementById("history").innerText = "Keine Einträge";
     return;
   }
 
-  history.innerText = snap.docs.map(doc => {
+  let output = "";
+
+  snap.forEach(doc => {
     const h = doc.data();
-    return `${new Date(h.time).toLocaleString()} – ${h.bookedBy ?? "?"} ➜ ${h.assignedTo ?? "?"}: ${h.text ?? ""}`;
-  }).join("\n");
+
+    const time  = h.time ? new Date(h.time).toLocaleString() : "Unbekannte Zeit";
+    const giver = h.bookedBy    || "Unbekannt";
+    const recv  = h.assignedTo  || "Unbekannt";
+    const text  = h.text        || "";
+
+    output += `${time} – ${giver} ➜ ${recv}: ${text}\n`;
+  });
+
+  document.getElementById("history").innerText = output;
 }
 
 /* ✅ Ausleihen */
