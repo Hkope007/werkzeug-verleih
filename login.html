@@ -3,17 +3,14 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Login Werkzeug-Verleih</title>
 
-  <title>Login – Werkzeug Verleih</title>
-
-  <!-- ✅ Firebase -->
-  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
-
-  <style>
-    body { font-family: Arial; background:#f4f4f4; padding:20px; }
-    .card { background:white; padding:20px; max-width:380px; margin:auto;
-      border-radius:8px; border:1px solid #ccc; }
-    input,button { width:100%; padding:12px; margin-top:10px; font-size:16px; }
+  https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js
+  <script src="https://www.gstaticjs/10.8.0/firebase-auth-compat.js
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-<style>
+    body{font-family:Arial;padding:20px;background:#f4f4f4;}
+    .card{background:white;padding:20px;border-radius:8px;border:1px solid #ccc;max-width:360px;margin:auto;}
+    input,button{width:100%;padding:12px;margin-top:10px;font-size:16px;}
   </style>
 </head>
 
@@ -28,35 +25,33 @@
 </div>
 
 <script>
-const firebaseConfig = {
-  apiKey: "AIzaSyCjoG7jIP1xs-uoBTMezml7UuTsyIouzoY",
-  authDomain: "werkzeug-verleih-sv.firebaseapp.com",
-  projectId: "werkzeug-verleih-sv",
-  storageBucket: "werkzeug-verleih-sv.appspot.com",
-  messagingSenderId: "1083183347140",
-  appId: "1:1083183347140:web:26b2a6c2203b7c6021e091"
+const firebaseConfig={
+  apiKey:"AIzaSyCjoG7jIP1xs-uoBTMezml7UuTsyIouzoY",
+  authDomain:"werkzeug-verleih-sv.firebaseapp.com",
+  projectId:"werkzeug-verleih-sv",
+  storageBucket:"werkzeug-verleih-sv.appspot.com",
+  messagingSenderId:"1083183347140",
+  appId:"1:1083183347140:web:26b2a6c2203b7c6021e091"
 };
 
 firebase.initializeApp(firebaseConfig);
 
-const auth = firebase.auth();
-const db = firebase.firestore();
+const auth=firebase.auth();
+const db=firebase.firestore();
 
-/* ✅ Eingeloggt bleiben */
-auth.onAuthStateChanged(async (user)=>{
-  if (!user) return;
-  window.location.href = "index.html";
+auth.onAuthStateChanged(async user=>{
+  if(user) window.location.href="index.html";
 });
 
 async function login(){
-  const mail = document.getElementById("email").value;
-  const pw = document.getElementById("password").value;
+  const mail=document.getElementById("email").value;
+  const pw=document.getElementById("password").value;
 
-  try {
-    await auth.signInWithEmailAndPassword(mail, pw);
-    window.location.href = "index.html";
+  try{
+    await auth.signInWithEmailAndPassword(mail,pw);
+    window.location.href="index.html";
   } catch(e){
-    alert("❌ " + e.message);
+    alert("❌ "+e.message);
   }
 }
 </script>
