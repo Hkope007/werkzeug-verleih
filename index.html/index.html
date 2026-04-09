@@ -1,85 +1,64 @@
 <!DOCTYPE html>
 <html lang="de">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Werkzeug Verleih</title>
 
-  <!-- ✅ Firebase COMPAT SDK (RICHTIG!) -->
-  <script src="https://www.gstatic.com/firebasejsase-app-compat.js</script>
+  <!-- ✅ Firebase COMPAT SDK -->
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
 
   <style>
-    body {
-      font-family: Arial, sans-serif;
-      padding: 20px;
-      background: #f4f4f4;
-    }
+    body { font-family: Arial; padding: 20px; background: #f4f4f4; }
     .card {
-      background: #fff;
+      background: white;
       padding: 16px;
       border-radius: 8px;
-      max-width: 480px;
       border: 1px solid #ccc;
-      margin-bottom: 22px;
+      max-width: 480px;
+      margin-bottom: 20px;
     }
     input, select, button {
-      width: 100%;
-      padding: 10px;
-      margin-top: 8px;
-      font-size: 16px;
+      width: 100%; padding: 10px; margin-top: 8px; font-size: 16px;
     }
-    .admin-btn {
-      background: #444;
-      color: #fff;
-      cursor: pointer;
-    }
-    .danger {
-      background: #b30000 !important;
-      color: #fff;
-      cursor: pointer;
-    }
-    .history {
-      white-space: pre-line;
-      font-size: 14px;
-      background: #fafafa;
-      border: 1px solid #ddd;
-      padding: 10px;
-      max-height: 220px;
-      overflow-y: auto;
-    }
+    .danger { background: #b00000; color: white; }
+    .admin-btn { background: #444; color: white; }
+    .history { white-space: pre-line; max-height: 260px; overflow-y: auto; padding: 10px; border: 1px solid #ddd; }
   </style>
-</head>
 
+</head>
 <body>
 
 <h1>🔧 Werkzeug Verleih</h1>
 
-<button class="admin-btn" onclick="openAdminLogin()">🔐 Admin Login</button>
+<button class="admin-btn" onclick="logout()">🔓 Abmelden</button>
 
-<div id="toolCard" class="card">Warte auf Werkzeug …</div>
+<div id="toolCard" class="card">Warte auf Werkzeug…</div>
 
 <div class="card">
   <h3>📜 Historie</h3>
-  <div id="history">Noch keine Einträge</div>
+  <div id="history" class="history">Noch keine Einträge</div>
 </div>
 
-<!-- ✅ ADMIN PANEL -->
+<!-- ✅ ADMIN-BEREICH -->
 <div id="adminPanel" style="display:none;">
   <div class="card">
-    <h2>🔧 Admin Bereich</h2>
+    <h2>🔧 Admin-Bereich</h2>
 
     <h3>👤 Mitarbeiter hinzufügen</h3>
-    <input id="newEmpId" placeholder="Mitarbeiter-ID (z.B. TRASCH)">
+    <input id="newEmpId" placeholder="Mitarbeiter-ID">
     <input id="newEmpName" placeholder="Mitarbeiter-Name">
+    <input id="newEmpEmail" placeholder="E-Mail">
+    <input id="newEmpPw" placeholder="Passwort">
     <button onclick="addEmployee()">✅ Mitarbeiter speichern</button>
 
     <h3>🧑‍🤝‍🧑 Mitarbeiterliste</h3>
     <div id="empList"></div>
 
     <h3>🛠 Werkzeug hinzufügen</h3>
-    <input id="newToolId" placeholder="Werkzeug-ID (AKKU-002)">
+    <input id="newToolId" placeholder="Werkzeug-ID (z.B. AKKU-002)">
     <input id="newToolName" placeholder="Werkzeugname">
     <input id="newToolTotal" placeholder="Gesamtmenge">
     <button onclick="addTool()">✅ Werkzeug speichern</button>
@@ -92,43 +71,51 @@
 </div>
 
 <script>
-/* ✅ Deine Firebase Config */
+/* ✅ Firebase Config */
 const firebaseConfig = {
   apiKey: "AIzaSyCjoG7jIP1xs-uoBTMezml7UuTsyIouzoY",
   authDomain: "werkzeug-verleih-sv.firebaseapp.com",
   projectId: "werkzeug-verleih-sv",
   storageBucket: "werkzeug-verleih-sv.appspot.com",
   messagingSenderId: "1083183347140",
-  appId: "1:1083183347140:web:26b2a6c2203b7c6021e091",
-  measurementId: "G-9B4KKYD7F3"
+  appId: "1:1083183347140:web:26b2a6c2203b7c6021e091"
 };
 
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 const auth = firebase.auth();
-auth.signInAnonymously();
 
-/* ✅ Werkzeug-ID aus URL */
+/* ✅ Eingeloggter Benutzer */
+let currentUser = null;
+let currentUserData = null;
+
+/* ✅ Login-Status prüfen */
+auth.onAuthStateChanged(async user => {
+  if (!user) return window.location.href = "login.html";
+  currentUser = user;
+
+  const snap = await db.collection("users").where("email", "==", user.email).get();
+  currentUserData = snap.docs[0].data();
+
+  // Wenn Admin → Admin-Bereich anzeigen
+  if (currentUserData.role === "admin") {
+    document.getElementById("adminPanel").style.display = "block";
+    loadAdmin();
+  }
+  
+  loadTool();
+});
+
+/* ✅ Werkzeug-ID aus URL holen */
 const params = new URLSearchParams(window.location.search);
 const toolId = params.get("tool");
-
-const toolCard = document.getElementById("toolCard");
-const historyEl = document.getElementById("history");
-
 const toolRef = db.collection("tools").doc(toolId);
 const histRef = db.collection("history_" + toolId);
 
-/* ✅ Mitarbeiter laden */
-async function getEmployees() {
-  const snap = await db.collection("users").get();
-  return snap.docs.map(d => ({ id: d.id, ...d.data() }));
-}
-
-/* ✅ Werkzeug laden */
 async function loadTool() {
   const snap = await toolRef.get();
   if (!snap.exists) {
-    toolCard.innerHTML = "❌ Werkzeug nicht gefunden";
+    document.getElementById("toolCard").innerHTML = "❌ Werkzeug nicht gefunden!";
     return;
   }
 
@@ -136,21 +123,17 @@ async function loadTool() {
   const total = Number(tool.total);
   const available = Number(tool.available);
 
-  const employees = await getEmployees();
-
-  toolCard.innerHTML = `
+  document.getElementById("toolCard").innerHTML = `
     <h2>${tool.name}</h2>
     <p><b>ID:</b> ${toolId}</p>
     <p><b>Verfügbar:</b> ${available} von ${total}</p>
 
-    <label>Mitarbeiter auswählen:</label>
-    <select id="empSelect">
-      ${employees.map(e => `<option value="${e.id}">${e.name}</option>`).join("")}
-    </select>
+    <label>Werkzeug ausgeben an:</label>
+    <input id="assignedTo" placeholder="Name eingeben (leer = selbst ausleihen)">
 
     <label>Menge:</label>
     <select id="qty">
-      ${Array.from({ length: total }, (_, i) => `<option>${i+1}</option>`).join("")}
+      ${Array.from({length: total}, (_,i)=>`<option>${i+1}</option>`).join("")}
     </select>
 
     <button onclick="borrow()">➡️ Ausleihen</button>
@@ -163,27 +146,24 @@ async function loadTool() {
 /* ✅ Historie laden */
 async function loadHistory() {
   const snap = await histRef.orderBy("time", "desc").get();
-
   if (snap.empty) {
-    historyEl.innerHTML = "Noch keine Einträge";
+    document.getElementById("history").innerHTML = "Noch keine Einträge";
     return;
   }
 
-  historyEl.innerHTML = snap.docs
-    .map(d => {
+  document.getElementById("history").innerHTML =
+    snap.docs.map(d => {
       const h = d.data();
-      return `${new Date(h.time).toLocaleString()} – ${h.employee}: ${h.text}`;
-    })
-    .join("\n");
+      return `${new Date(h.time).toLocaleString()} – ${h.bookedBy} hat an ${h.assignedTo} ausgegeben: ${h.text}`;
+    }).join("\n");
 }
 
 /* ✅ Ausleihen */
 async function borrow() {
   const qty = Number(document.getElementById("qty").value);
-  const empId = document.getElementById("empSelect").value;
+  const assigned = document.getElementById("assignedTo").value.trim();
 
-  const empSnap = await db.collection("users").doc(empId).get();
-  const empName = empSnap.data().name;
+  const assignedTo = assigned === "" ? currentUserData.name : assigned;
 
   await db.runTransaction(async tx => {
     const snap = await tx.get(toolRef);
@@ -195,8 +175,9 @@ async function borrow() {
     tx.update(toolRef, { available: String(available - qty) });
     tx.set(histRef.doc(), {
       time: Date.now(),
-      employee: empName,
-      text: `Ausgeliehen: ${qty}`
+      bookedBy: currentUserData.name,
+      assignedTo,
+      text: `${qty} Stück`
     });
   });
 
@@ -206,10 +187,6 @@ async function borrow() {
 /* ✅ Rückgabe */
 async function giveBack() {
   const qty = Number(document.getElementById("qty").value);
-  const empId = document.getElementById("empSelect").value;
-
-  const empSnap = await db.collection("users").doc(empId).get();
-  const empName = empSnap.data().name;
 
   await db.runTransaction(async tx => {
     const snap = await tx.get(toolRef);
@@ -223,58 +200,36 @@ async function giveBack() {
     tx.update(toolRef, { available: String(available + qty) });
     tx.set(histRef.doc(), {
       time: Date.now(),
-      employee: empName,
-      text: `Zurückgegeben: ${qty}`
+      bookedBy: currentUserData.name,
+      assignedTo: currentUserData.name,
+      text: `Rückgabe: ${qty} Stück`
     });
   });
 
   loadTool();
 }
 
-/* ✅ ADMIN LOGIN */
-function openAdminLogin() {
-  const pw = prompt("Admin-PIN:");
-  if (pw === "1234") loadAdmin();
-  else alert("❌ Falscher PIN!");
-}
-
-/* ✅ ADMIN PANEL LADEN */
-async function loadAdmin() {
-  document.getElementById("adminPanel").style.display = "block";
-
-  const empSnap = await db.collection("users").get();
-  document.getElementById("empList").innerHTML =
-    empSnap.docs.map(d => `${d.id} — ${d.data().name}`).join("<br>");
-
-  const toolSnap = await db.collection("tools").get();
-  document.getElementById("toolList").innerHTML =
-    toolSnap.docs.map(d => `${d.id} — ${d.data().name} (${d.data().total})`).join("<br>");
-}
-
-/* ✅ ADMIN SCHLIESSEN */
-function closeAdmin() {
-  document.getElementById("adminPanel").style.display = "none";
-}
-
-/* ✅ Mitarbeiter hinzufügen */
+/* ✅ Admin: Mitarbeiter hinzufügen */
 async function addEmployee() {
-  const id = document.getElementById("newEmpId").value;
-  const name = document.getElementById("newEmpName").value;
+  const id = newEmpId.value.trim();
+  const name = newEmpName.value.trim();
+  const email = newEmpEmail.value.trim();
+  const pw = newEmpPw.value.trim();
 
-  if (!id || !name) return alert("Bitte alles ausfüllen!");
+  if (!id || !name || !email || !pw) return alert("Bitte alles ausfüllen!");
 
-  await db.collection("users").doc(id).set({ name });
+  await auth.createUserWithEmailAndPassword(email, pw);
+  await db.collection("users").doc(id).set({ name, email, role: "mitarbeiter" });
+
   alert("✅ Mitarbeiter gespeichert!");
   loadAdmin();
 }
 
-/* ✅ Werkzeug hinzufügen */
+/* ✅ Admin: Werkzeug speichern */
 async function addTool() {
-  const id = document.getElementById("newToolId").value;
-  const name = document.getElementById("newToolName").value;
-  const total = document.getElementById("newToolTotal").value;
-
-  if (!id || !name || !total) return alert("Bitte alles ausfüllen!");
+  const id = newToolId.value.trim();
+  const name = newToolName.value.trim();
+  const total = newToolTotal.value.trim();
 
   await db.collection("tools").doc(id).set({
     name,
@@ -286,8 +241,22 @@ async function addTool() {
   loadAdmin();
 }
 
-/* ✅ Starten */
-loadTool();
+/* ✅ Admin-Bereich laden */
+async function loadAdmin() {
+  const empSnap = await db.collection("users").get();
+  empList.innerHTML = empSnap.docs.map(d => `${d.id} — ${d.data().name}`).join("<br>");
+
+  const toolSnap = await db.collection("tools").get();
+  toolList.innerHTML = toolSnap.docs
+    .map(d => `${d.id} — ${d.data().name} (${d.data().total})`)
+    .join("<br>");
+}
+
+/* ✅ Abmelden */
+function logout() {
+  auth.signOut().then(() => window.location.href = "login.html");
+}
+
 </script>
 
 </body>
