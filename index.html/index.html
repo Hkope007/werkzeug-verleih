@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Werkzeug Verleih</title>
 
-  <!-- ✅ Firebase COMPAT SDK (richtige Version für deine App!) -->
+  <!-- ✅ Firebase COMPAT SDK -->
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
@@ -25,7 +25,7 @@
       margin-bottom: 18px;
     }
     h1,h2,h3 { margin-top: 0; }
-    select, button {
+    select, button, input {
       padding: 10px;
       font-size: 16px;
       width: 100%;
@@ -55,7 +55,7 @@
 
 <script>
   // ---------------------------------------------------------
-  // ✅ DEINE FIREBASE CONFIG (aus deinem Screenshot eingefügt)
+  // ✅ DEINE FIREBASE CONFIG HIER EINTRAGEN
   // ---------------------------------------------------------
   const firebaseConfig = {
     apiKey: "AIzaSyCjoG7jIP1xs-uoBTMezml7UuTsyIouzoY",
@@ -67,9 +67,14 @@
     measurementId: "G-9B4KKYD7F3"
   };
 
-  // ✅ Firebase initialisieren
   firebase.initializeApp(firebaseConfig);
   const db = firebase.firestore();
+  const auth = firebase.auth();
+
+  // Anonymer Login (nur du, keine Mitarbeiter)
+  auth.signInAnonymously().then(() => {
+    console.log("✅ Angemeldet als:", auth.currentUser.uid);
+  });
 
   // ---------------------------------------------------------
   // ✅ Werkzeug-ID aus URL holen (?tool=AKKU-001)
@@ -85,9 +90,6 @@
     throw new Error("Kein tool Parameter");
   }
 
-  // ---------------------------------------------------------
-  // ✅ Firestore Referenzen
-  // ---------------------------------------------------------
   const toolRef = db.collection("tools").doc(toolId);
   const historyRef = db.collection("history_" + toolId);
 
@@ -103,8 +105,6 @@
     }
 
     const tool = snap.data();
-
-    // Strings → Zahlen konvertieren
     const total = Number(tool.total);
     const available = Number(tool.available);
 
@@ -113,13 +113,16 @@
       <p><b>ID:</b> ${toolId}</p>
       <p><b>Verfügbar:</b> ${available} von ${total}</p>
 
+      <label>Mitarbeitername:</label>
+      <input id="empName" type="text" placeholder="Name eingeben">
+
       <label>Menge auswählen:</label>
       <select id="qty">
         ${Array.from({length: total}, (_, i) => `<option value="${i+1}">${i+1}</option>`).join("")}
       </select>
 
       <button onclick="borrow()">➡️ Ausleihen</button>
-      <button onclick="giveBack()">⬅️ Zurückgeben</button>
+      <button onclick="giveBack()">⬅️ Rückgeben</button>
     `;
 
     loadHistory();
@@ -138,7 +141,7 @@
 
     historyEl.innerHTML = snap.docs.map(doc => {
       const d = doc.data();
-      return `${new Date(d.time).toLocaleString()} – ${d.text}`;
+      return `${new Date(d.time).toLocaleString()} – ${d.employee}: ${d.text}`;
     }).join("\n");
   }
 
@@ -147,6 +150,7 @@
   // ---------------------------------------------------------
   async function borrow() {
     const qty = Number(document.getElementById("qty").value);
+    const emp = document.getElementById("empName").value || "Unbekannt";
 
     await db.runTransaction(async (tx) => {
       const snap = await tx.get(toolRef);
@@ -161,47 +165,4 @@
       tx.update(toolRef, { available: String(available - qty) });
       tx.set(historyRef.doc(), {
         time: Date.now(),
-        text: `Ausgeliehen: ${qty}`
-      });
-    });
-
-    loadTool();
-  }
-
-  // ---------------------------------------------------------
-  // ✅ Rückgabe
-  // ---------------------------------------------------------
-  async function giveBack() {
-    const qty = Number(document.getElementById("qty").value);
-
-    await db.runTransaction(async (tx) => {
-      const snap = await tx.get(toolRef);
-      const tool = snap.data();
-
-      const total = Number(tool.total);
-      const available = Number(tool.available);
-
-      if (available + qty > total) {
-        alert("❌ Rückgabe zu hoch!");
-        return;
-      }
-
-      tx.update(toolRef, { available: String(available + qty) });
-      tx.set(historyRef.doc(), {
-        time: Date.now(),
-        text: `Zurückgegeben: ${qty}`
-      });
-    });
-
-    loadTool();
-  }
-
-  // ---------------------------------------------------------
-  // ✅ Start
-  // ---------------------------------------------------------
-  loadTool();
-
-</script>
-
-</body>
-</html>
+        employee: emp,
