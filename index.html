@@ -2,165 +2,172 @@
 <html lang="de">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Werkzeug Verleih</title>
 
-<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+<!-- ✅ Firebase Scripts – ECHTE <script>-Tags -->
+<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-ript src="https://www.gstatic.com/firebasejs/10.firestore-compat.js</script>
 <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
 
 <style>
-body{font-family:Arial;padding:20px;background:#f4f4f4;}
-.card{background:white;padding:20px;border-radius:8px;border:1px solid #ccc;max-width:450px;margin-bottom:20px;}
-input,select,button{width:100%;padding:10px;margin-top:10px;font-size:16px;}
-.history{white-space:pre-line;background:white;border:1px solid #ccc;padding:10px;max-height:250px;overflow-y:auto;}
+body { font-family: Arial; padding:20px; background:#f4f4f4; }
+.card { background:white; padding:20px; border-radius:8px; border:1px solid #ccc; max-width:450px; margin-bottom:20px; }
+input,select,button { width:100%; padding:10px; margin-top:10px; font-size:16px; }
+.history { white-space:pre-line; background:white; border:1px solid #ccc; padding:10px; max-height:250px; overflow-y:auto; }
 </style>
 </head>
 
 <body>
 
-<button onclick="logout()">?? Abmelden</button>
+<button onclick="logout()">🔓 Abmelden</button>
 
-<div id="toolCard" class="card">Warte auf Werkzeug�</div>
+<div id="toolCard" class="card">Warte auf Werkzeug…</div>
 
 <div class="card">
-  <h3>?? Historie</h3>
-  <div id="history" class="history">Lade�</div>
+  <h3>📜 Historie</h3>
+  <div id="history" class="history">Lade…</div>
 </div>
 
 <script>
-const firebaseConfig={
-  apiKey:"AIzaSyCjoG7jIP1xs-uoBTMezml7UuTsyIouzoY",
-  authDomain:"werkzeug-verleih-sv.firebaseapp.com",
-  projectId:"werkzeug-verleih-sv",
-  storageBucket:"werkzeug-verleih-sv.appspot.com",
-  messagingSenderId:"1083183347140",
-  appId:"1:1083183347140:web:26b2a6c2203b7c6021e091"
+/* ✅ Firebase Konfiguration */
+const firebaseConfig = {
+  apiKey: "AIzaSyCjoG7jIP1xs-uoBTMezml7UuTsyIouzoY",
+  authDomain: "werkzeug-verleih-sv.firebaseapp.com",
+  projectId: "werkzeug-verleih-sv",
+  storageBucket: "werkzeug-verleih-sv.appspot.com",
+  messagingSenderId: "1083183347140",
+  appId: "1:1083183347140:web:26b2a6c2203b7c6021e091"
 };
 
 firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
+const auth = firebase.auth();
 
-const db=firebase.firestore();
-const auth=firebase.auth();
+let currentUserData = null;
 
-let currentUserData=null;
+/* ✅ Eingeloggt Benutzer laden */
+auth.onAuthStateChanged(async user => {
+  if (!user) { window.location = "login.html"; return; }
 
-auth.onAuthStateChanged(async user=>{
-  if(!user){window.location="login.html";return;}
+  const snap = await db.collection("users")
+    .where("email", "==", user.email)
+    .get();
 
-  const s=await db.collection("users")
-                  .where("email","==",user.email)
-                  .get();
-
-  currentUserData=s.docs[0].data();
+  currentUserData = snap.docs[0].data();
   loadTool();
 });
 
-const params=new URLSearchParams(window.location.search);
-const toolId=params.get("tool");
-const toolRef=db.collection("tools").doc(toolId);
-const histRef=db.collection("history_"+toolId);
+/* ✅ Werkzeug-ID lesen */
+const params = new URLSearchParams(window.location.search);
+const toolId = params.get("tool");
 
-async function loadTool(){
-  const snap=await toolRef.get();
-  if(!snap.exists){
-    toolCard.textContent="? Werkzeug nicht gefunden!";
+const toolRef = db.collection("tools").doc(toolId);
+const histRef = db.collection("history_" + toolId);
+
+/* ✅ Werkzeug laden */
+async function loadTool() {
+  const snap = await toolRef.get();
+  if (!snap.exists) {
+    toolCard.textContent = "❌ Werkzeug nicht gefunden!";
     return;
   }
 
-  const t=snap.data();
+  const t = snap.data();
 
-  toolCard.innerHTML=`
+  toolCard.innerHTML = `
     <h2>${t.name}</h2>
-    <p>Verf�gbar: ${t.available} von ${t.total}</p>
+    <p>Verfügbar: ${t.available} von ${t.total}</p>
 
     <label>Werkzeug ausgeben an:</label>
     <input id="assigned" placeholder="leer = selbst">
 
     <label>Menge:</label>
     <select id="qty">
-      ${Array.from({length:Number(t.total)},(_,i)=>`<option>${i+1}</option>`).join("")}
+      ${Array.from({length:Number(t.total)}, (_,i)=>`<option>${i+1}</option>`).join("")}
     </select>
 
-    <button onclick="borrow()">?? Ausleihen</button>
-    <button onclick="giveBack()">?? R�ckgabe</button>
+    <button onclick="borrow()">➡️ Ausleihen</button>
+    <button onclick="giveBack()">⬅️ Rückgabe</button>
   `;
 
   loadHistory();
 }
 
-async function loadHistory(){
-  const snap=await histRef.orderBy("time","desc").get();
+/* ✅ Historie laden — robust */
+async function loadHistory() {
+  const snap = await histRef.orderBy("time","desc").get();
 
-  if(snap.empty){
-    history.innerText="Keine Eintr�ge";
+  if (snap.empty) {
+    history.innerText = "Keine Einträge";
     return;
   }
 
-  history.innerText=snap.docs
-    .map(doc=>{
-      const h=doc.data();
-      return `${new Date(h.time).toLocaleString()} � ${h.bookedBy ?? "?"} ? ${h.assignedTo ?? "?"}: ${h.text ?? ""}`;
-    })
-    .join("\n");
+  history.innerText = snap.docs.map(doc => {
+    const h = doc.data();
+    return `${new Date(h.time).toLocaleString()} – ${h.bookedBy ?? "?"} ➜ ${h.assignedTo ?? "?"}: ${h.text ?? ""}`;
+  }).join("\n");
 }
 
-async function borrow(){
-  const qty=Number(document.getElementById("qty").value);
-  const assignedInput=document.getElementById("assigned").value.trim();
-  const assigned = assignedInput==="" ? currentUserData.name : assignedInput;
+/* ✅ Ausleihen */
+async function borrow() {
+  const qty = Number(document.getElementById("qty").value);
+  const assignedInput = document.getElementById("assigned").value.trim();
+  const assigned = assignedInput === "" ? currentUserData.name : assignedInput;
 
-  const text = assigned===currentUserData.name
-    ? `${qty} St�ck selbst ausgeliehen`
-    : `${qty} St�ck an ${assigned} ausgegeben`;
+  const text =
+    assigned === currentUserData.name
+      ? `${qty} Stück selbst ausgeliehen`
+      : `${qty} Stück an ${assigned} ausgegeben`;
 
-  await db.runTransaction(async tx=>{
-    const snap=await tx.get(toolRef);
-    const t=snap.data();
+  await db.runTransaction(async tx => {
+    const snap = await tx.get(toolRef);
+    const t = snap.data();
 
-    if(Number(t.available)<qty){
-      alert("Nicht genug verf�gbar!");
+    if (Number(t.available) < qty) {
+      alert("Nicht genug verfügbar!");
       return;
     }
 
-    tx.update(toolRef,{available:String(Number(t.available)-qty)});
-    tx.set(histRef.doc(),{
-      time:Date.now(),
-      bookedBy:currentUserData.name,
-      assignedTo:assigned,
-      text:text
+    tx.update(toolRef, { available:String(Number(t.available) - qty) });
+    tx.set(histRef.doc(), {
+      time: Date.now(),
+      bookedBy: currentUserData.name,
+      assignedTo: assigned,
+      text: text
     });
   });
 
   loadTool();
 }
 
-async function giveBack(){
-  const qty=Number(document.getElementById("qty").value);
+/* ✅ Rückgabe */
+async function giveBack() {
+  const qty = Number(document.getElementById("qty").value);
 
-  await db.runTransaction(async tx=>{
-    const snap=await tx.get(toolRef);
-    const t=snap.data();
+  await db.runTransaction(async tx => {
+    const snap = await tx.get(toolRef);
+    const t = snap.data();
 
-    if(Number(t.available)+qty>Number(t.total)){
-      alert("R�ckgabe zu hoch!");
+    if (Number(t.available) + qty > Number(t.total)) {
+      alert("Rückgabe zu hoch!");
       return;
     }
 
-    tx.update(toolRef,{available:String(Number(t.available)+qty)});
-    tx.set(histRef.doc(),{
-      time:Date.now(),
-      bookedBy:currentUserData.name,
-      assignedTo:currentUserData.name,
-      text:`${qty} St�ck zur�ckgenommen`
+    tx.update(toolRef, { available:String(Number(t.available) + qty) });
+    tx.set(histRef.doc(), {
+      time: Date.now(),
+      bookedBy: currentUserData.name,
+      assignedTo: currentUserData.name,
+      text: `${qty} Stück zurückgenommen`
     });
   });
 
   loadTool();
 }
 
-function logout(){
-  auth.signOut().then(()=>window.location="login.html");
+/* ✅ Logout */
+function logout() {
+  auth.signOut().then(() => window.location = "login.html");
 }
 </script>
 
