@@ -3,21 +3,17 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
+
   <title>Login – Werkzeug Verleih</title>
 
-  <!-- ✅ Firebase SDK korrekt -->
-  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat src="https://www.gstatic.com/firebasejs/10.8.th-compat.js
-  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebasempat.js
+  <!-- ✅ Firebase -->
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
 
   <style>
-    body { font-family: Arial; padding: 20px; background:#f4f4f4; }
-    .card {
-      max-width: 380px; margin: auto; padding: 20px;
-      border: 1px solid #ccc; border-radius: 8px; background: white;
-    }
-    input, button {
-      width: 100%; padding: 12px; margin-top: 10px; font-size: 16px;
-    }
+    body { font-family: Arial; background:#f4f4f4; padding:20px; }
+    .card { background:white; padding:20px; max-width:380px; margin:auto;
+      border-radius:8px; border:1px solid #ccc; }
+    input,button { width:100%; padding:12px; margin-top:10px; font-size:16px; }
   </style>
 </head>
 
@@ -32,7 +28,6 @@
 </div>
 
 <script>
-/* ✅ Deine Firebase Config */
 const firebaseConfig = {
   apiKey: "AIzaSyCjoG7jIP1xs-uoBTMezml7UuTsyIouzoY",
   authDomain: "werkzeug-verleih-sv.firebaseapp.com",
@@ -43,30 +38,25 @@ const firebaseConfig = {
 };
 
 firebase.initializeApp(firebaseConfig);
+
 const auth = firebase.auth();
 const db = firebase.firestore();
 
-/* ✅ Benutzer bleibt eingeloggt */
-auth.onAuthStateChanged(async user => {
+/* ✅ Eingeloggt bleiben */
+auth.onAuthStateChanged(async (user)=>{
   if (!user) return;
-
-  const snap = await db.collection("users").where("email", "==", user.email).get();
-  if (snap.empty) return;
-
   window.location.href = "index.html";
 });
 
-/* ✅ Login-Button */
-async function login() {
-  const email = document.getElementById("email").value;
+async function login(){
+  const mail = document.getElementById("email").value;
   const pw = document.getElementById("password").value;
 
   try {
-    await auth.signInWithEmailAndPassword(email, pw);
+    await auth.signInWithEmailAndPassword(mail, pw);
     window.location.href = "index.html";
-  }
-  catch (err) {
-    alert("❌ Login fehlgeschlagen: " + err.message);
+  } catch(e){
+    alert("❌ " + e.message);
   }
 }
 </script>
