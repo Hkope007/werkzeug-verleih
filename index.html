@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Werkzeug Verleih</title>
 
-<!-- ✅ Firebase Scripts -->
+<!-- ✅ Firebase Scripts – richtig! -->
 https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js>
 https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js>
 https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js>
@@ -30,7 +30,6 @@ input,select,button{width:100%;padding:10px;margin-top:10px;font-size:16px;}
 </div>
 
 <script>
-/* ✅ Firebase Config */
 const firebaseConfig={
   apiKey:"AIzaSyCjoG7jIP1xs-uoBTMezml7UuTsyIouzoY",
   authDomain:"werkzeug-verleih-sv.firebaseapp.com",
@@ -58,7 +57,7 @@ auth.onAuthStateChanged(async user=>{
   loadTool();
 });
 
-/* ✅ Werkzeug-ID aus URL */
+/* ✅ Werkzeug-ID */
 const params=new URLSearchParams(window.location.search);
 const toolId=params.get("tool");
 const toolRef=db.collection("tools").doc(toolId);
@@ -93,7 +92,7 @@ async function loadTool(){
   loadHistory();
 }
 
-/* ✅ Historie laden — ROBUST (funktioniert mit alten & neuen Einträgen) */
+/* ✅ History robust laden */
 async function loadHistory(){
   const snap=await histRef.orderBy("time","desc").get();
 
@@ -102,24 +101,19 @@ async function loadHistory(){
     return;
   }
 
-  history.innerText = snap.docs
+  history.innerText=snap.docs
     .map(doc=>{
       const h=doc.data();
-      const booked = h.bookedBy || "Unbekannt";
-      const assigned = h.assignedTo || "Unbekannt";
-      const text = h.text || "";
-      const time = new Date(h.time).toLocaleString();
-
-      return `${time} – ${booked} ➜ ${assigned}: ${text}`;
+      return `${new Date(h.time).toLocaleString()} – ${h.bookedBy ?? "?"} ➜ ${h.assignedTo ?? "?"}: ${h.text ?? ""}`;
     })
     .join("\n");
 }
 
-/* ✅ Werkzeug ausleihen */
+/* ✅ Ausleihen */
 async function borrow(){
   const qty=Number(document.getElementById("qty").value);
   const assignedInput=document.getElementById("assigned").value.trim();
-  const assigned = assignedInput==="" ? currentUserData.name : assignedInput;
+  const assigned = assignedInput === "" ? currentUserData.name : assignedInput;
 
   const text = assigned===currentUserData.name
     ? `${qty} Stück selbst ausgeliehen`
