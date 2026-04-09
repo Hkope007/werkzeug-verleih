@@ -2,28 +2,26 @@
 <html lang="de">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Login – Werkzeug Verleih</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Werkzeug Verleih</title>
 
-  <script src="https://www.gstatic.com/firebasejs/10.8.0-compat.js
-https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
 https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js
+https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js
 
   <style>
-    body { font-family: Arial; padding: 20px; background:#f4f4f4; }
-    .card { max-width:380px; margin:auto; background:white; padding:20px; border-radius:8px; border:1px solid #ccc; }
-    input,button { width:100%; padding:12px; margin-top:10px; font-size:16px; }
+    body{font-family:Arial;padding:20px;background:#f4f4f4;}
+    .card{background:white;padding:20px;border-radius:9px;border:1px solid #ccc;}
+    input,select,button{width:100%;padding:12px;margin-top:10px;}
   </style>
 </head>
+
 <body>
 
-<h2>🔐 Login Werkzeug-Verleih</h2>
+<button onclick="logout()">🔓 Abmelden</button>
 
-<div class="card">
-  <input id="email" type="email" placeholder="E-Mail">
-  <input id="password" type="password" placeholder="Passwort">
-  <button onclick="login()">✅ Login</button>
-</div>
+<div id="toolCard" class="card">Warte auf Werkzeug…</div>
+<div class="card"><h3>📜 Historie</h3><div id="history"></div></div>
 
 <script>
 const firebaseConfig = {
@@ -36,25 +34,90 @@ const firebaseConfig = {
 };
 
 firebase.initializeApp(firebaseConfig);
-const auth = firebase.auth();
 const db = firebase.firestore();
+const auth = firebase.auth();
+let userData=null;
 
-auth.onAuthStateChanged(async user => {
-  if (!user) return;
-  const s = await db.collection("users").where("email", "==", user.email).get();
-  if (!s.empty) window.location.href = "index.html";
+auth.onAuthStateChanged(async user=>{
+  if(!user) return window.location="login.html";
+  const s = await db.collection("users").where("email","==",user.email).get();
+  userData = s.docs[0].data();
+  loadTool();
 });
 
-async function login() {
-  const email = document.getElementById("email").value;
-  const pw = document.getElementById("password").value;
+function logout(){ auth.signOut(); window.location="login.html"; }
 
-  try {
-    await auth.signInWithEmailAndPassword(email, pw);
-    window.location.href = "index.html";
-  } catch(e) {
-    alert("❌ " + e.message);
-  }
+const params=new URLSearchParams(window.location.search);
+const toolId=params.get("tool");
+const toolRef=db.collection("tools").doc(toolId);
+const histRef=db.collection("history_"+toolId);
+
+async function loadTool(){
+  const snap=await toolRef.get();
+  if(!snap.exists){toolCard.innerHTML="❌ Nicht gefunden";return;}
+
+  const t=snap.data();
+  toolCard.innerHTML=`
+    <h2>${t.name}</h2>
+    <p>Verfügbar: ${t.available} von ${t.total}</p>
+    <label>Werkzeug ausgeben an:</label>
+    <input id="assigned" placeholder="leer = selbst">
+    <label>Menge:</label>
+    <select id="qty">
+      ${Array.from({length:Number(t.total)},(_,i)=>`<option>${i+1}</option>`).join("")}
+    </select>
+    <button onclick="borrow()">➡️ Ausleihen</button>
+    <button onclick="giveBack()">⬅️ Rückgabe</button>
+  `;
+  loadHistory();
+}
+
+async function loadHistory(){
+  const snap=await histRef.orderBy("time","desc").get();
+  history.innerHTML=snap.empty?"Keine Einträge":
+    snap.docs.map(d=>{
+      const h=d.data();
+      return `${new Date(h.time).toLocaleString()} – ${h.bookedBy} ➜ ${h.assignedTo}: ${h.text}`;
+    }).join("<br>");
+}
+
+async function borrow(){
+  const qty=Number(document.getElementById("qty").value);
+  const assigned=document.getElementById("assigned").value || userData.name;
+
+  await db.runTransaction(async tx=>{
+    const snap=await tx.get(toolRef);
+    const t=snap.data();
+    if(Number(t.available)<qty) return alert("Nicht genug verfügbar");
+
+    tx.update(toolRef,{available:String(Number(t.available)-qty)});
+    tx.set(histRef.doc(),{
+      time:Date.now(),
+      bookedBy:userData.name,
+      assignedTo:assigned,
+      text:`${qty} Stück ausgegeben`
+    });
+  });
+  loadTool();
+}
+
+async function giveBack(){
+  const qty=Number(document.getElementById("qty").value);
+
+  await db.runTransaction(async tx=>{
+    const snap=await tx.get(toolRef);
+    const t=snap.data();
+    if(Number(t.available)+qty>Number(t.total)) return alert("Rückgabe zu hoch");
+
+    tx.update(toolRef,{available:String(Number(t.available)+qty)});
+    tx.set(histRef.doc(),{
+      time:Date.now(),
+      bookedBy:userData.name,
+      assignedTo:userData.name,
+      text:`${qty} Stück zurückgegeben`
+    });
+  });
+  loadTool();
 }
 </script>
 
