@@ -6,9 +6,8 @@
 <title>Werkzeug Verleih</title>
 
 <!-- ✅ Firebase Scripts -->
-https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js>
-https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js>
-https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js>
+<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.jsript src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
 
 <style>
 body{font-family:Arial;padding:20px;background:#f4f4f4;}
@@ -30,7 +29,7 @@ input,select,button{width:100%;padding:10px;margin-top:10px;font-size:16px;}
 </div>
 
 <script>
-/* ✅ Firebase Konfiguration */
+/* ✅ Firebase Config */
 const firebaseConfig={
   apiKey:"AIzaSyCjoG7jIP1xs-uoBTMezml7UuTsyIouzoY",
   authDomain:"werkzeug-verleih-sv.firebaseapp.com",
@@ -46,22 +45,19 @@ const auth=firebase.auth();
 
 let currentUserData=null;
 
-/* ✅ Eingeloggten User laden */
+/* ✅ Benutzer laden */
 auth.onAuthStateChanged(async user=>{
-  if(!user){
-    window.location="login.html";
-    return;
-  }
-
+  if(!user){window.location="login.html";return;}
+  
   const snap=await db.collection("users")
-                    .where("email","==",user.email)
-                    .get();
+                     .where("email","==",user.email)
+                     .get();
 
   currentUserData=snap.docs[0].data();
   loadTool();
 });
 
-/* ✅ Werkzeug holen */
+/* ✅ Tool aus URL holen */
 const params=new URLSearchParams(window.location.search);
 const toolId=params.get("tool");
 const toolRef=db.collection("tools").doc(toolId);
@@ -71,13 +67,13 @@ const histRef=db.collection("history_"+toolId);
 async function loadTool(){
   const snap=await toolRef.get();
   if(!snap.exists){
-    document.getElementById("toolCard").innerText="❌ Werkzeug nicht gefunden";
+    toolCard.textContent="❌ Werkzeug nicht gefunden!";
     return;
   }
 
   const t=snap.data();
 
-  document.getElementById("toolCard").innerHTML=`
+  toolCard.innerHTML=`
     <h2>${t.name}</h2>
     <p>Verfügbar: ${t.available} von ${t.total}</p>
 
@@ -96,16 +92,16 @@ async function loadTool(){
   loadHistory();
 }
 
-/* ✅ History MIT NAMEN */
+/* ✅ History laden */
 async function loadHistory(){
   const snap=await histRef.orderBy("time","desc").get();
 
   if(snap.empty){
-    history.innerText="Keine Einträge";
+    history.textContent="Keine Einträge";
     return;
   }
 
-  history.innerText = snap.docs.map(doc=>{
+  history.innerText=snap.docs.map(doc=>{
     const h=doc.data();
     return `${new Date(h.time).toLocaleString()} – ${h.bookedBy} ➜ ${h.assignedTo}: ${h.text}`;
   }).join("\n");
@@ -113,27 +109,25 @@ async function loadHistory(){
 
 /* ✅ Ausleihen */
 async function borrow(){
-  const qty=Number(qtyElem.value);
-  const assignedName=assigned.value.trim() || currentUserData.name;
+  const qty=Number(document.getElementById("qty").value);
+  const assignedInput=document.getElementById("assigned").value.trim();
+  const assigned=assignedInput===""?currentUserData.name:assignedInput;
 
-  let text = assignedName===currentUserData.name
+  const text=assigned===currentUserData.name
     ? `${qty} Stück selbst ausgeliehen`
-    : `${qty} Stück an ${assignedName} ausgegeben`;
+    : `${qty} Stück an ${assigned} ausgegeben`;
 
   await db.runTransaction(async tx=>{
     const snap=await tx.get(toolRef);
     const t=snap.data();
 
-    if(Number(t.available)<qty){
-      alert("Nicht genug verfügbar!");
-      return;
-    }
+    if(Number(t.available)<qty){alert("Nicht genug verfügbar!");return;}
 
     tx.update(toolRef,{available:String(Number(t.available)-qty)});
     tx.set(histRef.doc(),{
       time:Date.now(),
       bookedBy:currentUserData.name,
-      assignedTo:assignedName,
+      assignedTo:assigned,
       text:text
     });
   });
@@ -143,7 +137,7 @@ async function borrow(){
 
 /* ✅ Rückgabe */
 async function giveBack(){
-  const qty=Number(qtyElem.value);
+  const qty=Number(document.getElementById("qty").value);
 
   await db.runTransaction(async tx=>{
     const snap=await tx.get(toolRef);
