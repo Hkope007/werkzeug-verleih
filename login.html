@@ -38,10 +38,9 @@
   }
 </style>
 
-<!-- ✅ Firebase 8 (gleiche Version wie index.html) -->
-<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
-https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js
-
+<!-- ✅ KORREKTE Firebase 8 Scripts -->
+https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js>
+https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js>
 
 <script>
 // ✅ Gleiche Config wie index.html
@@ -64,7 +63,7 @@ function loginUser(){
 
   auth.signInWithEmailAndPassword(mail, pw)
     .then(() => {
-      window.location = "home.html";  // ODER index.html?tool=....
+      window.location = "home.html";  
     })
     .catch(err => alert("Fehler: " + err.message));
 }
