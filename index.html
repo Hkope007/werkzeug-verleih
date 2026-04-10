@@ -174,8 +174,8 @@ window.onerror = function(msg, url, line, col, error) {
       const h = doc.data();
 
       const time = new Date(h.time).toLocaleString();
-      const giver = h.bookedBy ?? "Unbekannt";
-      const recv = h.assignedTo ?? "Unbekannt";
+     const giver = h.bookedBy ?? h.bookedby ?? "Unbekannt";
+    const recv  = h.assignedTo ?? h.assignedto ?? "Unbekannt";
       const text = h.text ?? "";
 
       let cssClass = "history-entry";
