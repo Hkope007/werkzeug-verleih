@@ -78,7 +78,21 @@
   <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
-
+<script>
+window.onerror = function(msg, url, line, col, error) {
+  const errorBox = document.createElement("div");
+  errorBox.style.background = "#ffdddd";
+  errorBox.style.border = "2px solid red";
+  errorBox.style.padding = "10px";
+  errorBox.style.marginTop = "20px";
+  errorBox.innerHTML = `
+    <h3>❌ JavaScript Fehler:</h3>
+    <p><b>${msg}</b></p>
+    <p>${url} (Zeile ${line})</p>
+  `;
+  document.body.appendChild(errorBox);
+};
+</script>
   <script>
   // Firebase Config
   const firebaseConfig = {
