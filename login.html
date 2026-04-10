@@ -63,7 +63,7 @@ function loginUser(){
 
   auth.signInWithEmailAndPassword(mail, pw)
     .then(() => {
-      window.location = "home.html";  
+      window.location = "welcome.html";  
     })
     .catch(err => alert("Fehler: " + err.message));
 }
