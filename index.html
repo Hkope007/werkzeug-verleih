@@ -149,36 +149,17 @@
 
   // ✅ Historie laden
   async function loadHistory(){
-    const snap = await histRef.orderBy("time","desc").get();
+  console.log("History Collection:", "history_" + toolId);
 
-    if (snap.empty){
-      history.innerHTML = "<div class='history-entry'>Keine Einträge</div>";
-      return;
-    }
+  const snap = await histRef.orderBy("time","desc").get()
+    .catch(err => console.error("Fehler beim Laden:", err));
 
-    history.innerHTML = snap.docs.map(doc => {
-      const h = doc.data();
+  console.log("Anzahl Einträge:", snap.size);
 
-      const time = new Date(h.time).toLocaleString();
-      const giver = h.bookedBy ?? "Unbekannt";
-      const recv  = h.assignedTo ?? "Unbekannt";
-      const text  = h.text ?? "";
-
-      let cssClass = "history-entry";
-      if (text.includes("zurück")) cssClass += " history-rueckgabe";
-      else if (text.includes("ausgegeben")) cssClass += " history-ausgabe";
-      else if (text.includes("selbst")) cssClass += " history-ausleihe";
-
-      return `
-        <div class="${cssClass}">
-          ${time}<br>
-          <b>${giver}</b> ➜ <b>${recv}</b><br>
-          ${text}
-        </div>
-      `;
-    }).join("");
+  if (snap.empty){
+    history.innerHTML = "<div class='history-entry'>Keine Einträge</div>";
+    return;
   }
-
   // ✅ Ausleihen
   async function borrow() {
     const qty = Number(document.getElementById("qty").value);
