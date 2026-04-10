@@ -1,9 +1,9 @@
-﻿
+
 <!DOCTYPE html>
 <html lang="de">
 <head>
   <meta charset="UTF-8" />
-  <title>Werkzeugdetails</title>
+  <title>Offline Test – Werkzeugseite</title>
 
   <style>
     body {
@@ -25,187 +25,107 @@
     button {
       margin-top: 10px; padding: 10px; width: 100%;
       background: #0080ff; border: none; border-radius: 5px; color: white;
+      cursor: pointer;
     }
     button:hover { background: #005fcc; }
+
     .history-entry {
-      background: white; padding: 10px; border-radius: 6px;
-      margin-bottom: 10px; box-shadow: 0 0 4px rgba(0,0,0,0.15);
+      background: white;
+      padding: 10px;
+      border-radius: 6px;
+      margin-bottom: 10px;
+      box-shadow: 0 0 4px rgba(0,0,0,0.15);
     }
     .history-ausgabe { border-left: 5px solid #0078ff; }
     .history-rueckgabe { border-left: 5px solid #28a745; }
     .history-ausleihe { border-left: 5px solid #ff9800; }
 
-    #logoutBtn { background: #d9534f; margin-top: 20px; }
+    #logoutBtn {
+      background: #d9534f;
+      margin-top: 20px;
+    }
   </style>
 </head>
 <body>
 
-  <h1>🔧 Werkzeugverwaltung – Details</h1>
+  <h1>✅ OFFLINE TEST – Werkzeugdetails</h1>
 
   <div id="toolCard">Lade Werkzeugdaten…</div>
 
-  <h2>Historie</h2>
-  <div id="history">Lade Historie…</div>
+  <h2>Historie (offline Simulation)</h2>
+  <div id="history">Wird geladen…</div>
 
-  <button id="logoutBtn" onclick="logout()">Logout</button>
+  <script>
+    // ✅ Offline-Simulation: Werkzeugdaten manuell setzen
+    const tool = {
+      name: "Akkuschrauber (Test)",
+      available: 3,
+      total: 5
+    };
 
-  <!-- Firebase -->
-https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js
-https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js
-https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js
+    const fakeHistory = [
+      {
+        time: Date.now() - 1000 * 60 * 60,
+        giver: "Heinz",
+        recv: "Mario",
+        text: "1 Stück ausgegeben",
+        type: "ausgabe"
+      },
+      {
+        time: Date.now() - 1000 * 60 * 20,
+        giver: "Mario",
+        recv: "Heinz",
+        text: "1 Stück zurückgegeben",
+        type: "rückgabe"
+      }
+    ];
 
-<script>
-  const firebaseConfig = {
-    apiKey: "AIzaSyCjoG7jIP1xs-u0BTMezml7UuTsyIouzoY",
-    authDomain: "werkzeug-verleih-sv.firebaseapp.com",
-    projectId: "werkzeug-verleih-sv",
-    storageBucket: "werkzeug-verleih-sv.appspot.com",
-    messagingSenderId: "1083183347140",
-    appId: "1:1083183347140:web:26b2a6c2203b7c6021e091"
-  };
+    // ✅ Werkzeug laden
+    function loadTool() {
+      document.getElementById("toolCard").innerHTML = `
+        <h2>${tool.name}</h2>
+        <p>Verfügbar: ${tool.available} von ${tool.total}</p>
 
-  firebase.initializeApp(firebaseConfig);
-  const db = firebase.firestore();
-  const auth = firebase.auth();
+        <label>Werkzeug ausgeben an:</label>
+        <input id="assigned" placeholder="leer = selbst">
 
-  let currentUserData = null;
+        <label>Menge:</label>
+        <select id="qty">
+          <option>1</option>
+          <option>2</option>
+          <option>3</option>
+        </select>
 
-  auth.onAuthStateChanged(async user => {
-    if (!user) { window.location = "login.html"; return; }
+        <button onclick="alert('Ausleihen funktioniert (offline) ✔')">
+          ➡️ Ausleihen
+        </button>
 
-    const snap = await db.collection("users")
-      .where("email", "==", user.email).get();
-
-    currentUserData = snap.docs[0].data();
-    loadTool();
-  });
-
-  const params = new URLSearchParams(window.location.search);
-  const toolId = params.get("tool");
-
-  const toolRef = db.collection("tools").doc(toolId);
-  const histRef = db.collection("history_" + toolId);
-
-  async function loadTool() {
-    const snap = await toolRef.get();
-    if (!snap.exists) {
-      document.getElementById("toolCard").innerHTML = "❌ Werkzeug nicht gefunden!";
-      return;
-    }
-
-    const t = snap.data();
-
-    document.getElementById("toolCard").innerHTML = `
-      <h2>${t.name}</h2>
-      <p>Verfügbar: ${t.available} von ${t.total}</p>
-
-      <label>Werkzeug ausgeben an:</label>
-      <input id="assigned" placeholder="leer = selbst">
-
-      <label>Menge:</label>
-      <select id="qty">
-        ${Array.from({ length: Number(t.total) }, (_, i) =>
-          `<option>${i + 1}</option>`).join("")}
-      </select>
-
-      <button onclick="borrow()">➡️ Ausleihen</button>
-      <button onclick="giveBack()">⬅️ Rückgabe</button>
-    `;
-
-    loadHistory();
-  }
-
-  async function loadHistory() {
-    const snap = await histRef.orderBy("time", "desc").get();
-
-    if (snap.empty) {
-      history.innerHTML = "<div class='history-entry'>Keine Einträge</div>";
-      return;
-    }
-
-    history.innerHTML = snap.docs.map(doc => {
-      const h = doc.data();
-      const time = new Date(h.time).toLocaleString();
-      const giver = h.bookedBy ?? h.bookedby ?? "Unbekannt";
-      const recv  = h.assignedTo ?? h.assignedto ?? "Unbekannt";
-      const text = h.text ?? "";
-
-      let cssClass = "history-entry";
-      if (text.includes("zurück")) cssClass += " history-rueckgabe";
-      else if (text.includes("ausgegeben")) cssClass += " history-ausgabe";
-      else if (text.includes("selbst")) cssClass += " history-ausleihe";
-
-      return `
-        <div class="${cssClass}">
-          ${time}<br>
-          <b>${giver}</b> ➜ <b>${recv}</b><br>
-          ${text}
-        </div>
+        <button onclick="alert('Rückgabe funktioniert (offline) ✔')">
+          ⬅️ Rückgabe
+        </button>
       `;
-    }).join("");
-  }
 
-  async function borrow() {
-    const qty = Number(document.getElementById("qty").value);
-    const assignedInput = document.getElementById("assigned").value.trim();
-    const assigned = assignedInput === "" ? currentUserData.name : assignedInput;
+      loadHistory();
+    }
 
-    const text =
-      assigned === currentUserData.name
-        ? `${qty} Stück selbst ausgeliehen`
-        : `${qty} Stück an ${assigned} ausgegeben`;
+    // ✅ Historie laden
+    function loadHistory() {
+      const hDIV = document.getElementById("history");
+      hDIV.innerHTML = fakeHistory.map(h => {
+        const t = new Date(h.time).toLocaleString();
+        return `
+          <div class="history-entry history-${h.type}">
+            ${t}<br>
+            <b>${h.giver}</b> ➜ <b>${h.recv}</b><br>
+            ${h.text}
+          </div>
+        `;
+      }).join("");
+    }
 
-    await db.runTransaction(async tx => {
-      const snap = await tx.get(toolRef);
-      const t = snap.data();
-
-      if (Number(t.available) < qty) {
-        alert("Nicht genug verfügbar!");
-        return;
-      }
-
-      tx.update(toolRef, {
-        available: String(Number(t.available) - qty),
-        lastBorrower: assigned
-      });
-
-      tx.set(histRef.doc(), {
-        time: Date.now(),
-        bookedBy: currentUserData.name,
-        assignedTo: assigned,
-        text: text
-      });
-    });
-
+    // ✅ Start
     loadTool();
-  }
+  </script>
 
-  async function giveBack() {
-    const qty = Number(document.getElementById("qty").value);
-
-    await db.runTransaction(async tx => {
-      const snap = await tx.get(toolRef);
-      const t = snap.data();
-
-      if (Number(t.available) + qty > Number(t.total)) {
-        alert("Rückgabe zu hoch!");
-        return;
-      }
-
-      const originalBorrower = t.lastBorrower || currentUserData.name;
-
-      tx.update(toolRef, {
-        available: String(Number(t.available) + qty),
-        lastBorrower: null
-      });
-
-      tx.set(histRef.doc(), {
-        time: Date.now(),
-        bookedBy: currentUserData.name,
-        assignedTo: originalBorrower,
-        text: `${qty} Stück zurückgenommen`
-      });
-    });
-
-    loadTool();
-  }
+</body>
+</html>
