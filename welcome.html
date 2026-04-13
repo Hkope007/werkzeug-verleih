@@ -16,7 +16,6 @@
     height: 100vh;
     margin: 0;
   }
-
   .box {
     background: white;
     padding: 25px;
@@ -25,24 +24,14 @@
     width: 300px;
     box-shadow: 0 0 12px rgba(0,0,0,0.15);
   }
-
-  button {
-    margin-top: 20px;
-    width: 100%;
-    padding: 10px;
-    background: #0080ff;
-    color: white;
-    border: none;
-    border-radius: 5px;
-  }
 </style>
 
-<!-- ✅ Firebase laden -->
+<!-- Firebase -->
 <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
 
 <script>
-// ✅ Gleich wie in index+login
+// ✅ Firebase Config
 const firebaseConfig = {
   apiKey: "AIzaSyCjoG7jIP1xs-uoBTMezml7UuTsyIouzoY",
   authDomain: "werkzeug-verleih-sv.firebaseapp.com",
@@ -58,13 +47,11 @@ const auth = firebase.auth();
 // ✅ Persistenter Login
 auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL);
 
-// ✅ Check ob User eingeloggt ist
+// ✅ Wenn NICHT eingeloggt → zurück zum Login
 auth.onAuthStateChanged(user => {
   if (!user) {
-    // ❌ Wenn nicht eingeloggt → zurück zum Login
     window.location.href = "login.html";
   }
-  // ✅ Wenn eingeloggt → Seite anzeigen (tut welcome.html automatisch)
 });
 </script>
 
@@ -72,12 +59,8 @@ auth.onAuthStateChanged(user => {
 <body>
 
 <div class="box">
-  <h2>✅ Du bist jetzt eingeloggt Lager SV!</h2>
-  <p>Bitte scanne ein Werkzeug oder öffne einen QR‑Code.</p>
-
-  <button onclick="window.location='index.html?tool=AKKU-001'">
-    Beispiel Werkzeug öffnen
-  </button>
+  <h2>✅ Du bist jetzt eingeloggt!</h2>
+  <p>Scanne jetzt ein Werkzeug oder öffne einen QR‑Code.</p>
 </div>
 
 </body>
