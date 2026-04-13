@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="de">
 <head>
@@ -35,6 +36,37 @@
     border-radius: 5px;
   }
 </style>
+
+<!-- ✅ Firebase laden -->
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
+
+<script>
+// ✅ Gleich wie in index+login
+const firebaseConfig = {
+  apiKey: "AIzaSyCjoG7jIP1xs-uoBTMezml7UuTsyIouzoY",
+  authDomain: "werkzeug-verleih-sv.firebaseapp.com",
+  projectId: "werkzeug-verleih-sv",
+  storageBucket: "werkzeug-verleih-sv.appspot.com",
+  messagingSenderId: "1083183347140",
+  appId: "1:1083183347140:web:26b2a6c2203b7c6021e091"
+};
+
+firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth();
+
+// ✅ Persistenter Login
+auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL);
+
+// ✅ Check ob User eingeloggt ist
+auth.onAuthStateChanged(user => {
+  if (!user) {
+    // ❌ Wenn nicht eingeloggt → zurück zum Login
+    window.location.href = "login.html";
+  }
+  // ✅ Wenn eingeloggt → Seite anzeigen (tut welcome.html automatisch)
+});
+</script>
 
 </head>
 <body>
