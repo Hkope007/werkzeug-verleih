@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Werkzeug-Verleih</title>
+    <title>Werkzeug Verleih Lager SV</title>
 
     <style>
         body {
@@ -14,14 +14,14 @@
             background: #f2f2f2;
         }
 
-.title {
-    font-size: 26px;
-    font-weight: 800;
-    margin-bottom: 20px;
-    color: red;
-}
+        .title {
+            font-size: 26px;
+            font-weight: 800;
+            margin-bottom: 20px;
+            color: red;
+            text-align: center;
+        }
 
-        
         .card {
             background: white;
             padding: 18px;
@@ -57,28 +57,25 @@
 
         #borrowBtn { background: #2ecc71; }
         #returnBtn { background: #e74c3c; }
-
         #logoutBtn {
             background: #6c757d;
             color: white;
             padding: 12px 16px;
             border-radius: 8px;
             font-size: 16px;
-            border: none;
-            margin-bottom: 15px;
         }
 
         .history-entry {
             padding: 10px 0;
-            font-size: 16px;
             border-bottom: 1px solid #eee;
+            font-size: 16px;
         }
     </style>
 </head>
 
 <body>
 
-div class="title" style="color: red;">Werkzeug Verleih Lager SV</div>
+<div class="title">Werkzeug Verleih Lager SV</div>
 
 <div class="card">
     Eingeloggt als: <b id="userInfo"></b><br><br>
@@ -142,7 +139,6 @@ div class="title" style="color: red;">Werkzeug Verleih Lager SV</div>
 
     onAuthStateChanged(auth, async user => {
         if (!user) { window.location = "login.html"; return; }
-
         currentUser = user;
         document.getElementById("userInfo").innerText = user.email;
 
@@ -177,15 +173,12 @@ div class="title" style="color: red;">Werkzeug Verleih Lager SV</div>
         const sel = document.getElementById("amountSelect");
         sel.innerHTML = "";
 
-        const max = toolData.total;
-
-        for (let i = 1; i <= max; i++) {
-            let opt = document.createElement("option");
+        for (let i = 1; i <= toolData.total; i++) {
+            const opt = document.createElement("option");
             opt.value = i;
             opt.textContent = `${i} Stück`;
             sel.appendChild(opt);
         }
-
         sel.value = 1;
     }
 
@@ -204,9 +197,7 @@ div class="title" style="color: red;">Werkzeug Verleih Lager SV</div>
 
     window.borrowTool = async function () {
         let person = personField.value.trim();
-        if (person === "") {
-            person = currentUser.email; // ✅ selbst ausgeliehen
-        }
+        if (person === "") person = currentUser.email;
 
         const amount = Number(amountSelect.value);
 
