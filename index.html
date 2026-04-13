@@ -182,14 +182,21 @@
         loadHistory(sortedHistory);
     }
 
-    // History anzeigen
-    function loadHistory(list) {
-        historyBox.innerHTML = list.map(entry => `
-            <div class="history-entry">
-                ${entry.time} – <b>${entry.user}</b> – ${entry.action}
-                ${entry.person ? " an: " + entry.person : ""}
-            </div>
-        `).join("");
+// History anzeigen – neueste zuerst
+function loadHistory(list) {
+
+    // Sortieren: neueste zuerst
+    const sorted = list.sort((a, b) => 
+        new Date(b.time) - new Date(a.time)
+    );
+
+    historyBox.innerHTML = sorted.map(entry => `
+        <div class="history-entry">
+            ${entry.time} – <b>${entry.user}</b> – ${entry.action}
+            ${entry.person ? " an: " + entry.person : ""}
+        </div>
+    `).join("");
+  
     }
 
     // AUSLEIHEN
