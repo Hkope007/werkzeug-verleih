@@ -132,6 +132,24 @@
     let currentUser = null;
     let toolRef = null;
 
+    //--------------------------
+    // DATUM schön formatieren
+    //--------------------------
+    function formatDate(iso) {
+        const d = new Date(iso);
+        return d.toLocaleString("de-DE", {
+            day: "2-digit",
+            month: "2-digit",
+            year: "numeric",
+            hour: "2-digit",
+            minute: "2-digit",
+            second: "2-digit"
+        });
+    }
+
+    //--------------------------
+    // LOGIN PRÜFEN
+    //--------------------------
     onAuthStateChanged(auth, async user => {
         if (!user) { window.location = "login.html"; return; }
 
@@ -144,6 +162,9 @@
         loadTool(toolID);
     });
 
+    //--------------------------
+    // WERKZEUG LADEN
+    //--------------------------
     async function loadTool(id) {
         toolRef = doc(db, "tools", id);
         const snap = await getDoc(toolRef);
@@ -168,20 +189,26 @@
         loadHistory(data.history ? [...data.history] : []);
     }
 
+    //--------------------------
+    // VERLAUF ANZEIGEN
+    //--------------------------
     function loadHistory(list) {
+
         const sorted = list.sort((a, b) =>
             new Date(b.time) - new Date(a.time)
         );
 
         historyBox.innerHTML = sorted.map(entry => `
             <div class="history-entry">
-                ${entry.time} – <b>${entry.user}</b> – ${entry.action}
+                ${formatDate(entry.time)} – <b>${entry.user}</b> – ${entry.action}
                 ${entry.person ? " an: " + entry.person : ""}
             </div>
         `).join("");
     }
 
-    // ✅ AUSLEIHEN – neuer Eintrag bleibt IMMER erhalten
+    //--------------------------
+    // AUSLEIHEN (NEUER EINTRAG BLEIBT!)
+    //--------------------------
     window.borrowTool = async function () {
         const person = personField.value.trim();
         if (person === "") return alert("Bitte Empfänger eingeben!");
@@ -194,7 +221,7 @@
             user: currentUser.email,
             action: "Ausgeliehen",
             person: person,
-            time: new Date().toISOString()   // ✅ sortierbar
+            time: new Date().toISOString()
         });
 
         history.sort((a, b) => new Date(b.time) - new Date(a.time));
@@ -208,8 +235,11 @@
         location.reload();
     };
 
-    // ✅ ZURÜCKGEBEN – neuer Eintrag bleibt IMMER erhalten
+    //--------------------------
+    // ZURÜCKGEBEN (NEUER EINTRAG BLEIBT!)
+    //--------------------------
     window.returnTool = async function () {
+
         const snap = await getDoc(toolRef);
         const data = snap.data();
         let history = data.history || [];
@@ -218,7 +248,7 @@
             user: currentUser.email,
             action: "Zurückgegeben",
             person: "",
-          ime: new Date().toISOString()   // ✅ sortierbar
+            time: new Date().toISOString()
         });
 
         history.sort((a, b) => new Date(b.time) - new Date(a.time));
@@ -232,6 +262,9 @@
         location.reload();
     };
 
+    //--------------------------
+    // LOGOUT
+    //--------------------------
     window.logout = function () {
         signOut(auth).then(() => window.location = "login.html");
     };
