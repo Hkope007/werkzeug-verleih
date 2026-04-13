@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="de">
 <head>
@@ -7,13 +8,7 @@
 
 <style>
   body {
-    font-family: Arial, sans-serif;
-    background: #f2f2f2;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    height: 100vh;
-    margin: 0;
+: 0;    font-family: Arial, sans-serif;
   }
   .login-box {
     background: white;
@@ -38,12 +33,12 @@
   }
 </style>
 
-<!-- ✅ KORREKTE Firebase 8 Scripts -->
+<!-- ✅ Firebase -->
 <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
 
 <script>
-// ✅ Gleiche Config wie index.html
+// ✅ Firebase Config
 const firebaseConfig = {
   apiKey: "AIzaSyCjoG7jIP1xs-uoBTMezml7UuTsyIouzoY",
   authDomain: "werkzeug-verleih-sv.firebaseapp.com",
@@ -56,14 +51,24 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
 
+// ✅ Persistenter Login (SEHR wichtig!)
+auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL);
+
+// ✅ Falls Nutzer schon eingeloggt → direkt weiter
+auth.onAuthStateChanged(user => {
+  if (user) {
+    window.location.href = "welcome.html";
+  }
+});
+
 // ✅ Login-Funktion
-function loginUser(){
+function loginUser() {
   const mail = document.getElementById("email").value.trim();
   const pw   = document.getElementById("password").value.trim();
 
   auth.signInWithEmailAndPassword(mail, pw)
     .then(() => {
-      window.location = "welcome.html";  
+      window.location.href = "welcome.html";  // ✅ Korrekte Weiterleitung
     })
     .catch(err => alert("Fehler: " + err.message));
 }
@@ -83,3 +88,8 @@ function loginUser(){
 
 </body>
 </html>
+    background: #f2f2f2;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
