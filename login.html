@@ -1,0 +1,74 @@
+﻿
+!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login – Werkzeug-Verleih</title>
+
+    <style>
+        body { font-family: Arial; padding: 20px; }
+        .box {
+            max-width: 300px; margin: auto; margin-top: 80px;
+            padding: 20px; border: 1px solid #ccc; border-radius: 8px;
+        }
+        input, button {
+            width: 100%; padding: 10px; margin-top: 12px;
+        }
+        button {
+            background: #007bff; color: white; border: none; border-radius: 5px;
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="box">
+    <h2>Login</h2>
+    <input id="email" placeholder="E-Mail">
+    <input id="password" type="password" placeholder="Passwort">
+    <button onclick="login()">Einloggen</button>
+
+    <div id="err" style="color:red; margin-top:10px;"></div>
+</div>
+
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+    import { 
+        getAuth, 
+        signInWithEmailAndPassword, 
+        onAuthStateChanged 
+    } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyCjO67jP1xs-u0BTrnezml7uUTsyIouzoy",
+      authDomain: "werkzeug-verleih-sv.firebaseapp.com",
+      projectId: "werkzeug-verleih-sv",
+      storageBucket: "werkzeug-verleih-sv.firebasestorage.app",
+      messagingSenderId: "1083183347140",
+      appId: "1:1083183347140:web:26b2a6c2203b7c6021e091",
+      measurementId: "G-9B4KKYD7F3"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+
+    // Auto Login
+    onAuthStateChanged(auth, user => {
+        if (user) window.location = "index.html";
+    });
+
+    window.login = function () {
+        const email = document.getElementById("email").value;
+        const pw = document.getElementById("password").value;
+
+        signInWithEmailAndPassword(auth, email, pw)
+            .then(() => window.location = "index.html")
+            .catch(err => {
+                document.getElementById("err").innerHTML = err.code + "<br>" + err.message;
+            });
+    };
+</script>
+
+</body>
+</html>
