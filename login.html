@@ -2,49 +2,95 @@
 <!DOCTYPE html>
 <html lang="de">
 <head>
-    <meta charset="UTF-8">
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Login – Werkzeugverwaltung</title>
-</head>
-<body>
-<h2>Login</h2>
 
-<input id="email" placeholder="E‑Mail">
-<br><br>
-<input id="password" type="password" placeholder="Passwort">
-<br><br>
-<button onclick="login()">Login</button>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+        }
+
+        .box {
+            max-width: 300px;
+            margin: auto;
+            margin-top: 50px;
+            padding: 20px;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+        }
+
+        input {
+            width: 100%;
+            padding: 10px;
+            margin-top: 10px;
+        }
+
+        button {
+            width: 100%;
+            padding: 10px;
+            margin-top: 15px;
+            background: #007bff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+
+<body>
+<div class="box">
+    <h2>Login</h2>
+
+    <input id="email" placeholder="E‑Mail">
+    <input id="password" type="password" placeholder="Passwort">
+
+    <button onclick="login()">Einloggen</button>
+</div>
 
 <script type="module">
-    // Firebase importieren
+    /* ============================
+       Firebase Setup
+    ============================ */
+
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js";
-    import { getAuth, signInWithEmailAndPassword, onAuthStateChanged } 
-        from "https://www.gstatic.com/firebasejs/10.7.0/firebase-auth.js";
+    import { 
+        getAuth, 
+        signInWithEmailAndPassword, 
+        onAuthStateChanged 
+    } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-auth.js";
 
     const firebaseConfig = {
         apiKey: "DEINE_API_KEY",
-        authDomain: "DEIN_PROJEKT.firebaseapp.com",
-        projectId: "DEIN_PROJEKT",
+        authDomain: "DEIN_PROJECT.firebaseapp.com",
+        projectId: "DEIN_PROJECT"
     };
 
     const app = initializeApp(firebaseConfig);
     const auth = getAuth();
 
-    // Wenn User bereits eingeloggt -> weiterleiten
+    /* ============================
+        User bleibt eingeloggt
+    ============================ */
     onAuthStateChanged(auth, user => {
-        if (user) window.location = "index.html";
+        if (user) {
+            window.location = "index.html"; 
+        }
     });
 
-    // Login Funktion
+    /* ============================
+        Login Funktion
+    ============================ */
     window.login = function () {
-        const email = email.value;
-        const pw = password.value;
+        const email = document.getElementById("email").value;
+        const pw = document.getElementById("password").value;
 
         signInWithEmailAndPassword(auth, email, pw)
-            .then(() => {
-                window.location = "index.html";
-            })
-            .catch(err => alert("Login Fehler: " + err.message));
-    }
+            .then(() => window.location = "index.html")
+            .catch(err => alert("Login fehlgeschlagen:\n" + err.message));
+    };
 </script>
+
 </body>
 </html>
