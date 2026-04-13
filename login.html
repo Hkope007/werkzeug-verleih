@@ -8,7 +8,13 @@
 
 <style>
   body {
-: 0;    font-family: Arial, sans-serif;
+    font-family: Arial, sans-serif;
+    background: #f2f2f2;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    margin: 0;
   }
   .login-box {
     background: white;
@@ -33,12 +39,12 @@
   }
 </style>
 
-<!-- ✅ Firebase -->
+<!-- Firebase -->
 <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
 
 <script>
-// ✅ Firebase Config
+// Firebase Config
 const firebaseConfig = {
   apiKey: "AIzaSyCjoG7jIP1xs-uoBTMezml7UuTsyIouzoY",
   authDomain: "werkzeug-verleih-sv.firebaseapp.com",
@@ -51,24 +57,34 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
 
-// ✅ Persistenter Login (SEHR wichtig!)
+// Persistenter Login
 auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL);
 
-// ✅ Falls Nutzer schon eingeloggt → direkt weiter
+// Prüfen ob user schon eingeloggt
 auth.onAuthStateChanged(user => {
   if (user) {
-    window.location.href = "welcome.html";
+    // Wenn QR-Code gescannt wurde, URL beibehalten
+    if (window.location.search.includes("tool=")) {
+      window.location.href = "index.html" + window.location.search;
+    } else {
+      // Sonst einfach nur idle lassen
+      document.querySelector(".login-box").innerHTML = "<h2>✅ Du bist bereits eingeloggt.</h2><p>Bitte QR-Code scannen.</p>";
+    }
   }
 });
 
-// ✅ Login-Funktion
+// Login
 function loginUser() {
   const mail = document.getElementById("email").value.trim();
   const pw   = document.getElementById("password").value.trim();
 
   auth.signInWithEmailAndPassword(mail, pw)
     .then(() => {
-      window.location.href = "welcome.html";  // ✅ Korrekte Weiterleitung
+      if (window.location.search.includes("tool=")) {
+        window.location.href = "index.html" + window.location.search;
+      } else {
+        alert("✅ Erfolgreich eingeloggt! Bitte einen Werkzeug-QR-Code scannen.");
+      }
     })
     .catch(err => alert("Fehler: " + err.message));
 }
@@ -88,8 +104,3 @@ function loginUser() {
 
 </body>
 </html>
-    background: #f2f2f2;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    height: 100vh;
