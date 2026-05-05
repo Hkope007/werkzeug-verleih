@@ -171,7 +171,16 @@ onAuthStateChanged(auth, async user => {
 
     async function loadTool(id) {
         toolRef = doc(db, "tools", id);
-        const snap = await getDoc(toolRef);
+       
+let snap;
+try {
+  snap = await getDoc(toolRef);
+} catch (e) {
+  console.error("Firestore Fehler:", e);
+  toolBox.innerText = "❌ Zugriff auf Firestore fehlgeschlagen";
+  return;
+}
+
 
         if (!snap.exists()) {
             toolBox.innerHTML = "Werkzeug existiert nicht!";
