@@ -115,7 +115,15 @@
         apiKey: "AIzaSyCjoG7jIP1xs-uoBTMezml7UuTsyIouzoY",
         authDomain: "werkzeug-verleih-sv.firebaseapp.com",
         projectId: "werkzeug-verleih-sv"
-    };
+      
+// ✅ ERLAUBTE BENUTZER
+const ALLOWED_EMAILS = [
+  "heinz@firma.at",
+  "mario1@firma.at",
+  "mario2@firma.at"
+];
+  
+    
 
     const app = initializeApp(firebaseConfig);
     const auth = getAuth(app);
